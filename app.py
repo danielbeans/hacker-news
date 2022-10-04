@@ -1,28 +1,22 @@
-from flask import Flask, render_template
-
-app = Flask(__name__)
-
-
-@app.route("/")
-def index():
-    return render_template("home.html")
+from flask import Flask
+import api.db as db
+import api
+import views
 
 
-@app.route("/login")
-def login():
-    return render_template("login.html")
+def create_app():
+    app = Flask(__name__)
 
+    db.init_app(app)
 
-@app.route("/signup")
-def signup():
-    return render_template("signup.html")
+    # Register frontend templates
+    app.register_blueprint(views.admin)
+    app.register_blueprint(views.home)
+    app.register_blueprint(views.login)
+    app.register_blueprint(views.profile)
+    app.register_blueprint(views.signup)
 
+    # Register API Blueprints
+    app.register_blueprint(api.api)
 
-@app.route("/profile")
-def profile():
-    return render_template("profile.html")
-
-
-@app.route("/admin")
-def admin():
-    return render_template("admin.html")
+    return app
