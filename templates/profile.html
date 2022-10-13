@@ -1,18 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
-
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="../static/styles/bootstrap.min.css">
-</head>
-
-<body>
-    {{ profile }}
-</body>
-
-</html>
+{% extends 'base.html' %} {% block body %}
+<h1>{% block title%} {{profile}} {% endblock %}</h1>
+{% endblock body %}
