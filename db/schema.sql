@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS user;
-DROP TABLE IF EXISTS posts;
+DROP TABLE IF EXISTS top_stories;
+DROP TABLE IF EXISTS new_stories;
 
 CREATE TABLE user (
   id TEXT PRIMARY KEY,
@@ -8,12 +9,20 @@ CREATE TABLE user (
   nickname TEXT
 );
 
-CREATE TABLE stories (
+CREATE TABLE top_stories (
   id INT PRIMARY KEY ON CONFLICT IGNORE,
   title TEXT,
-  score TEXT,
-  time INT,
+  score INTEGER,
+  time INTEGER,
   author TEXT,
-  url TEXT,
-  
-)
+  url TEXT
+);
+
+CREATE TABLE new_stories (
+  id INT PRIMARY KEY ON CONFLICT IGNORE,
+  title TEXT,
+  score INTEGER,
+  time INTEGER,
+  author TEXT,
+  url TEXT
+);

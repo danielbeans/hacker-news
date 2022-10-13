@@ -15,7 +15,9 @@ auth0_domain = os.getenv("AUTH0_DOMAIN")
 def index():
     # If user token from auth0 is in session object (essentially a dict)
     if current_user.is_authenticated:
-        get_top_stories(2)
+        for story in get_top_stories(2):
+            for key in story.keys():
+                print(f"{key}: {story[key]}")
         return render_template("home.html")
     return render_template("login.html")
 

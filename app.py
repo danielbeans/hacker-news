@@ -1,9 +1,9 @@
 from flask import Flask
 from .db import init_app
 from . import views
-from .utilities import login_manager
+from .utilities import login_manager, init_api_data
 from dotenv import load_dotenv
-import os
+import os, time
 
 
 def create_app():
@@ -18,6 +18,16 @@ def create_app():
 
     # Initilize SQLite3 database
     init_app(app)
+
+    """
+    Populate database with Hacker News data
+    * Will take a couple minutes if database is empty
+    """
+    with app.app_context():
+        start = time.time()
+        print(" ** Adding Hacker News data **")
+        init_api_data()
+        print(f" * Done in {time.time() - start} *")
 
     # Register frontend templates
     app.register_blueprint(views.admin)
