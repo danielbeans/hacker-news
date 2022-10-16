@@ -1,4 +1,3 @@
-from operator import ge
 from flask import Blueprint, current_app, render_template, redirect, session, url_for
 from authlib.integrations.flask_client import OAuth
 import os

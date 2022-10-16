@@ -1,6 +1,7 @@
 from flask_login import LoginManager, UserMixin, login_user
 from ..db import query_db
 from uuid import uuid4
+from flask import session
 
 login_manager = LoginManager()
 
@@ -32,6 +33,7 @@ def session_login(token):
             "SELECT * FROM user WHERE email = ?", (user_info["email"],), one=True
         )
 
+    session["is_authenticated"] = True
     return login_user(UserLogin(user))
 
 

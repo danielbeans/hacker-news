@@ -2,6 +2,7 @@ import sqlite3
 
 import click
 from flask import current_app, g
+from time import time
 
 
 def query_db(query, args=(), one=False):
@@ -42,6 +43,6 @@ def init_db_command():
 
 
 # Called in app.py
-def init_app(app):
-    app.teardown_appcontext(close_db)
+def add_init_db_command(app):
+    app.teardown_appcontext(close_db)  # Close db when app closes
     app.cli.add_command(init_db_command)

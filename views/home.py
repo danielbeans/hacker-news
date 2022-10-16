@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, session, g
 import os
 from urllib.parse import quote_plus, urlencode
 from flask_login import logout_user, current_user, login_required
@@ -11,21 +11,25 @@ auth0_client_id = os.getenv("AUTH0_CLIENT_ID")
 auth0_domain = os.getenv("AUTH0_DOMAIN")
 
 
+@home.url_value_preprocessor
+def set_current_user(endpoint, values):
+    g.current_user = current_user
+
+
 @home.route("/")
 def index():
-    # If user token from auth0 is in session object (essentially a dict)
-    if current_user.is_authenticated:
-        for story in get_top_stories(2):
-            for key in story.keys():
-                print(f"{key}: {story[key]}")
-        return render_template("home.html")
-    return render_template("login.html")
+    for story in get_top_stories(2):
+        for key in story.keys():
+            pass
+            # print(f"{key}: {story[key]}")
+    return render_template("home.html")
 
 
 @home.route("/logout")
 @login_required
 def logout():
     logout_user()
+    session.pop("is_authenticated")
     return redirect(
         "https://"
         + auth0_domain

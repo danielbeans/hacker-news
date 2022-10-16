@@ -1,9 +1,9 @@
 from flask import Flask
-from .db import init_app
+from .db import add_init_db_command
 from . import views
-from .utilities import login_manager, init_api_data
+from .utilities import login_manager, add_create_data_command
 from dotenv import load_dotenv
-import os, time
+import os
 
 
 def create_app():
@@ -16,18 +16,11 @@ def create_app():
     # Load Flask-Login
     login_manager.init_app(app)
 
-    # Initilize SQLite3 database
-    init_app(app)
+    # Add command 'init-db' to create SQLite3 database
+    add_init_db_command(app)
 
-    """
-    Populate database with Hacker News data
-    * Will take a couple minutes if database is empty
-    """
-    with app.app_context():
-        start = time.time()
-        print(" ** Adding Hacker News data **")
-        init_api_data()
-        print(f" * Done in {time.time() - start} *")
+    # Add command 'create-data to add/update data from Hacker News API into the database
+    add_create_data_command(app)
 
     # Register frontend templates
     app.register_blueprint(views.admin)

@@ -1,6 +1,3 @@
 {% extends 'base.html' %} {% block body %}
-<h1>{% block title%} Home {% endblock %}</h1>
-<a class="btn btn-secondary" href="{{ url_for('home.logout')}}" role="button"
-    >Logout</a
->
+<h1>{% block title%} Welcome {{ g.current_user.nickname}} {% endblock %}</h1>
 {% endblock body %}

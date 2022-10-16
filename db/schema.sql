@@ -10,7 +10,7 @@ CREATE TABLE user (
 );
 
 CREATE TABLE top_stories (
-  id INT PRIMARY KEY ON CONFLICT IGNORE,
+  id INT PRIMARY KEY ON CONFLICT REPLACE,
   title TEXT,
   score INTEGER,
   time INTEGER,
@@ -19,7 +19,7 @@ CREATE TABLE top_stories (
 );
 
 CREATE TABLE new_stories (
-  id INT PRIMARY KEY ON CONFLICT IGNORE,
+  id INT PRIMARY KEY ON CONFLICT REPLACE,
   title TEXT,
   score INTEGER,
   time INTEGER,

@@ -18,6 +18,20 @@
     </head>
 
     <body>
-        {% block body %}{% endblock %}
+        {% if session['is_authenticated'] %}
+        <a
+            class="btn btn-secondary"
+            href="{{ url_for('home.logout')}}"
+            role="button"
+            >Logout</a
+        >
+        {% else %}
+        <a
+            class="btn btn-primary"
+            href="{{ url_for('login.index')}}"
+            role="button"
+            >Login</a
+        >
+        {% endif %} {% block body %}{% endblock %}
     </body>
 </html>
