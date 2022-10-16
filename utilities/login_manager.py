@@ -22,7 +22,7 @@ def session_login(token):
     if not user:
         user_nickname = (
             user_info["given_name"]
-            if user_info["given_name"]
+            if "given_name" in user_info
             else user_info["nickname"]
         )
         query_db(

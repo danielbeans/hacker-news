@@ -15,23 +15,38 @@
             rel="stylesheet"
             href="{{ url_for('static', filename='styles/bootstrap.min.css') }}"
         />
+
+        {# This auto format is very questionable #}{% if
+        session['is_authenticated'] %} {% set user_auth_link =
+        url_for("home.logout") %} {% set user_auth_text = "Logout" %} {% set
+        user_auth_class = "btn btn-danger" %} {% else %} {% set user_auth_link =
+        url_for("login.index") %} {% set user_auth_text = "Login" %} {% set
+        user_auth_class = "btn btn-warning" %} {% endif %}
     </head>
 
     <body>
-        {% if session['is_authenticated'] %}
-        <a
-            class="btn btn-secondary"
-            href="{{ url_for('home.logout')}}"
-            role="button"
-            >Logout</a
-        >
-        {% else %}
-        <a
-            class="btn btn-primary"
-            href="{{ url_for('login.index')}}"
-            role="button"
-            >Login</a
-        >
-        {% endif %} {% block body %}{% endblock %}
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-2">
+            <div class="container-fluid m-1">
+                <div class="navbar-nav">
+                    <a class="navbar-brand fw-bold" href="#">hacker news</a>
+                    <a class="nav-link active" aria-current="page" href="#"
+                        >Home</a
+                    >
+                    <a class="nav-link" href="#">New</a>
+                </div>
+                <div class="d-flex align-items-center">
+                    {% if session['is_authenticated'] %}
+                    <div class="mx-4 text-white">
+                        Welcome, {{ g.current_user.nickname}}
+                    </div>
+                    {% endif %}
+                    <a class="{{ user_auth_class }}" href="{{ user_auth_link }}"
+                        >{{ user_auth_text }}</a
+                    >
+                </div>
+            </div>
+        </nav>
+        {% block body %}{% endblock %}
     </body>
 </html>

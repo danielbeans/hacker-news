@@ -1,3 +1,18 @@
-{% extends 'base.html' %} {% block body %}
-<h1>{% block title%} Welcome {{ g.current_user.nickname}} {% endblock %}</h1>
-{% endblock body %}
+{% extends 'base.html' %} {% block title%} Home {% endblock %} {% block body %}
+<table class="table table-striped">
+    {%for count, story in top_stories %}
+    <tr>
+        <td>
+            <div class="d-flex px-2">
+                <div class="pe-4"># {{ count }}</div>
+                <div>
+                    <div class="fw-bold">{{ story["title"] }}</div>
+                    <small>
+                        {{ story["score"] }} points by {{ story["author"] }}
+                    </small>
+                </div>
+            </div>
+        </td>
+    </tr>
+    {% endfor %} {% endblock body %}
+</table>

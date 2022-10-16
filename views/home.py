@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, session, g
 import os
 from urllib.parse import quote_plus, urlencode
 from flask_login import logout_user, current_user, login_required
-from ..utilities import get_top_stories
+from ..utilities import query_top_stories
 
 
 home = Blueprint("home", __name__)
@@ -18,11 +18,11 @@ def set_current_user(endpoint, values):
 
 @home.route("/")
 def index():
-    for story in get_top_stories(2):
-        for key in story.keys():
-            pass
-            # print(f"{key}: {story[key]}")
-    return render_template("home.html")
+    num_stories = 30
+    numbered_top_stories = zip(
+        range(1, num_stories + 1), query_top_stories(num_stories)
+    )
+    return render_template("home.html", top_stories=numbered_top_stories)
 
 
 @home.route("/logout")
