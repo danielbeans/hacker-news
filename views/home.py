@@ -2,7 +2,9 @@ from flask import Blueprint, render_template, redirect, url_for, session, g
 import os
 from urllib.parse import quote_plus, urlencode
 from flask_login import logout_user, current_user, login_required
-from ..utilities import query_top_stories
+from ..utilities import query_top_stories, query_new_stories
+from time import time
+from datetime import timedelta, datetime
 
 
 home = Blueprint("home", __name__)
@@ -19,10 +21,16 @@ def set_current_user(endpoint, values):
 @home.route("/")
 def index():
     num_stories = 30
-    numbered_top_stories = zip(
-        range(1, num_stories + 1), query_top_stories(num_stories)
+
+    def zip_stories(stories):
+        publish_times = [int((time() - story.time) // 3600) for story in stories]
+        return zip(range(1, num_stories + 1), stories, publish_times)
+
+    numbered_top_stories = zip_stories(query_top_stories(num_stories))
+    numbered_new_stories = zip_stories(query_new_stories(num_stories))
+    return render_template(
+        "home.html", top_stories=numbered_top_stories, new_stories=numbered_new_stories
     )
-    return render_template("home.html", top_stories=numbered_top_stories)
 
 
 @home.route("/logout")

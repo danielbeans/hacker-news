@@ -1,14 +1,20 @@
 from flask import Flask
-from .db import add_init_db_command
+
+from .db import db
 from . import views
 from .utilities import login_manager, add_create_data_command
 from dotenv import load_dotenv
 import os
+from .tasks import scheduler
 
 
 def create_app():
+    basedir = os.path.abspath(os.path.dirname(__file__))  # ./hacker-news-project
+    database_path = os.path.join(basedir, "db", "database.db")
+
     app = Flask(__name__)
     app.secret_key = os.getenv("APP_SECRET_KEY")
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{database_path}"
 
     # Load .env
     load_dotenv()
@@ -16,8 +22,14 @@ def create_app():
     # Load Flask-Login
     login_manager.init_app(app)
 
-    # Add command 'init-db' to create SQLite3 database
-    add_init_db_command(app)
+    # Start scheduler for running tasks (under './tasks')
+    scheduler.init_app(app)
+    scheduler.start()
+
+    # Initilize Flask app to use database with SQLAlchemy
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
 
     # Add command 'create-data to add/update data from Hacker News API into the database
     add_create_data_command(app)

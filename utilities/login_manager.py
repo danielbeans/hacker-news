@@ -1,7 +1,7 @@
 from flask_login import LoginManager, UserMixin, login_user
-from ..db import query_db
 from uuid import uuid4
 from flask import session
+from ..db import db, User
 
 login_manager = LoginManager()
 
@@ -15,9 +15,9 @@ def load_user(id):
 def session_login(token):
     user_info = token["userinfo"]
 
-    user = query_db(
-        "SELECT * FROM user WHERE email = ?", (user_info["email"],), one=True
-    )
+    user = db.session.scalars(
+        db.select(User).filter_by(email=user_info["email"])
+    ).one_or_none()
 
     if not user:
         user_nickname = (
@@ -25,13 +25,14 @@ def session_login(token):
             if "given_name" in user_info
             else user_info["nickname"]
         )
-        query_db(
-            "INSERT INTO user (id, email, name, nickname) VALUES (?, ?, ?, ?)",
-            (str(uuid4()), user_info["email"], user_info["name"], user_nickname),
+        user = User(
+            id=str(uuid4()),
+            email=user_info["email"],
+            name=user_info["name"],
+            nickname=user_nickname,
         )
-        user = query_db(
-            "SELECT * FROM user WHERE email = ?", (user_info["email"],), one=True
-        )
+        db.session.add(user)
+    db.session.commit()
 
     session["is_authenticated"] = True
     return login_user(UserLogin(user))
@@ -39,13 +40,13 @@ def session_login(token):
 
 class UserLogin(UserMixin):
     def __init__(self, user):
-        self.id = user["id"]
-        self.name = user["name"]
-        self.nickname = user["nickname"]
-        self.email = user["email"]
+        self.id = user.id
+        self.name = user.name
+        self.nickname = user.nickname
+        self.email = user.email
 
     def __repr__(self):
         return "%s %s %s" % (self.id, self.name, self.email)
 
     def get(id):
-        return UserLogin(query_db("SELECT * FROM user WHERE id = ?", (id,), one=True))
+        return UserLogin(User.find_item(id))

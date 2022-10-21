@@ -1,18 +1,97 @@
 {% extends 'base.html' %} {% block title%} Home {% endblock %} {% block body %}
-<table class="table table-striped">
-    {%for count, story in top_stories %}
-    <tr>
-        <td>
-            <div class="d-flex px-2">
-                <div class="pe-4"># {{ count }}</div>
-                <div>
-                    <div class="fw-bold">{{ story["title"] }}</div>
-                    <small>
-                        {{ story["score"] }} points by {{ story["author"] }}
-                    </small>
-                </div>
-            </div>
-        </td>
-    </tr>
-    {% endfor %} {% endblock body %}
-</table>
+<nav>
+    <div class="nav nav-tabs justify-content-end" id="nav-tab" role="tablist">
+        <button class="btn btn-link me-auto">Refresh</button>
+        <button
+            class="nav-link active"
+            id="nav-top-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-top"
+            type="button"
+            role="tab"
+            aria-controls="nav-top"
+            aria-selected="true"
+        >
+            Top Stories
+        </button>
+        <button
+            class="nav-link"
+            id="nav-new-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#nav-new"
+            type="button"
+            role="tab"
+            aria-controls="nav-new"
+            aria-selected="false"
+        >
+            New Stories
+        </button>
+    </div>
+</nav>
+<div class="tab-content" id="nav-tabContent">
+    <div
+        class="tab-pane fade show active"
+        id="nav-top"
+        role="tabpanel"
+        aria-labelledby="nav-top-tab"
+        tabindex="0"
+    >
+        <table class="table table-striped">
+            {%for count, story, publish_time in top_stories %}
+            <tr>
+                <td>
+                    <div class="d-flex px-2">
+                        <div class="pe-4"># {{ count }}</div>
+                        <div>
+                            <div>
+                                <a
+                                    class="fw-bold link-unstyled"
+                                    href="{{ story.url }}"
+                                    >{{ story.title }}</a
+                                >
+                            </div>
+                            <small>
+                                {{ story.score }} points by {{ story.author }}
+                                {{ publish_time }} hours ago
+                            </small>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div
+        class="tab-pane fade"
+        id="nav-new"
+        role="tabpanel"
+        aria-labelledby="nav-new-tab"
+        tabindex="0"
+    >
+        <table class="table table-striped">
+            {%for count, story, publish_time in new_stories %}
+            <tr>
+                <td>
+                    <div class="d-flex px-2">
+                        <div class="pe-4"># {{ count }}</div>
+                        <div>
+                            <div>
+                                <a
+                                    class="fw-bold link-unstyled"
+                                    href="{{ story.url }}"
+                                    >{{ story.title }}</a
+                                >
+                            </div>
+                            <small>
+                                {{ story.score }} points by {{ story.author }}
+                                {{ publish_time }} hours ago
+                            </small>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock body %}
