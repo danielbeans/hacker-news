@@ -66,6 +66,10 @@ def query_new_stories(count=1):
     ).all()
 
 
+def query_story(id):
+    return db.session.scalars(db.select(TopStory).filter_by(id=id)).one_or_none()
+
+
 #####################################################
 #                                                   #
 # 'get_*' functions access Hacker News API for data #

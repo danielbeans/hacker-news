@@ -27,14 +27,45 @@
 
     <body>
         <!-- Navigation Bar -->
+        {% set active_page = active_page|default('index') -%}
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-2">
             <div class="container-fluid m-1">
                 <div class="navbar-nav">
-                    <a class="navbar-brand fw-bold" href="#">hacker news</a>
-                    <a class="nav-link active" aria-current="page" href="#"
+                    <a
+                        class="navbar-brand fw-bold"
+                        href="{{ url_for('home.index') }}"
+                        >hacker news</a
+                    >
+
+                    {% if "home" == active_page %}
+                    <a
+                        class="nav-link active"
+                        aria-current="page"
+                        href="{{ url_for('home.index') }}"
                         >Home</a
                     >
-                    <a class="nav-link" href="#">New</a>
+                    {% else %}
+                    <a
+                        class="nav-link"
+                        aria-current="page"
+                        href="{{ url_for('home.index') }}"
+                        >Home</a
+                    >
+                    {% endif %} {% if session['is_authenticated'] %} {% if
+                    "profile" == active_page %}
+                    <a
+                        class="nav-link active"
+                        class="nav-link"
+                        href="{{ url_for('profile.index', username=g.current_user.nickname) }}"
+                        >Profile</a
+                    >
+                    {% else %}
+                    <a
+                        class="nav-link"
+                        href="{{ url_for('profile.index', username=g.current_user.nickname) }}"
+                        >Profile</a
+                    >
+                    {% endif %} {% endif %}
                 </div>
                 <div class="d-flex align-items-center">
                     {% if session['is_authenticated'] %}
