@@ -1,9 +1,31 @@
 from flask_login import LoginManager, UserMixin, login_user
+from flask import current_app
 from uuid import uuid4
 from flask import session
 from ..db import db, User
+from authlib.integrations.flask_client import OAuth
+from dotenv import load_dotenv
+import os
 
 login_manager = LoginManager()
+oauth = OAuth()
+
+
+def init_oauth(oauth):
+    auth0_client_id = os.getenv("AUTH0_CLIENT_ID")
+    auth0_client_secret = os.getenv("AUTH0_CLIENT_SECRET")
+    auth0_domain = os.getenv("AUTH0_DOMAIN")
+
+    oauth.register(
+        "auth0",
+        client_id=auth0_client_id,
+        client_secret=auth0_client_secret,
+        client_kwargs={
+            "scope": "openid profile email",
+        },
+        server_metadata_url=f"https://{auth0_domain}/.well-known/openid-configuration",
+    )
+
 
 # Callback route to reload user from userID in session
 @login_manager.user_loader

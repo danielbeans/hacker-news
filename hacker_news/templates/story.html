@@ -17,7 +17,7 @@ block body %}
                         <a
                             class="link-unstyled"
                             href="{{ url_for('story.index', id=story.id) }}"
-                            >0 comments</a
+                            >{{ story.num_comments }} comments</a
                         >
                     </small>
                 </div>

@@ -7,7 +7,7 @@ from ..utilities import update_data
 scheduler = APScheduler()
 
 
-@scheduler.task("interval", id="get_new_api_data", seconds=300, misfire_grace_time=900)
+@scheduler.task("interval", id="get_new_api_data", seconds=3600, misfire_grace_time=900)
 def get_new_api_data():
     with scheduler.app.app_context():
         start = time()

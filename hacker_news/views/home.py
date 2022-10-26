@@ -2,15 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, session, g
 import os
 from urllib.parse import quote_plus, urlencode
 from flask_login import logout_user, current_user, login_required
-from ..utilities import query_top_stories, query_new_stories, update_data
+from ..utilities import query_top_stories, query_new_stories, update_data, oauth
 from time import time
 from datetime import timedelta
 import asyncio
 
 home = Blueprint("home", __name__)
-
-auth0_client_id = os.getenv("AUTH0_CLIENT_ID")
-auth0_domain = os.getenv("AUTH0_DOMAIN")
 
 
 def zip_stories(stories):
@@ -65,6 +62,8 @@ def update():
 def logout():
     logout_user()
     session.pop("is_authenticated")
+    auth0_client_id = os.getenv("AUTH0_CLIENT_ID")
+    auth0_domain = os.getenv("AUTH0_DOMAIN")
     return redirect(
         "https://"
         + auth0_domain

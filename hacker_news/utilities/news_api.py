@@ -7,16 +7,14 @@ from os.path import exists
 import asyncio
 import aiohttp
 
-# TODO: Create classes for all item types (make sure to ensure compatibilty with existing templates)
-
 MAX_STORY_COUNT = 500
 # Update items fetched from create_data().get_all_stories.().*.get_stories()
 UPDATE_DB = False
 
 # Populates database with story and comment data, used in 'create-data' flask command
 async def create_data():
-    stories = await get_all_stories()
-    insert_stories_db(stories=stories)
+    top_stories, new_stories = await get_all_stories()
+    insert_stories_db(top_stories=top_stories, new_stories=new_stories)
 
 
 # Updates database story data, used in 'get_new_api_data' APScheduler task
@@ -62,7 +60,7 @@ def query_top_stories(count=1):
 
 def query_new_stories(count=1):
     return db.session.scalars(
-        db.select(TopStory).order_by(TopStory.time.desc()).limit(count)
+        db.select(NewStory).order_by(NewStory.time.desc()).limit(count)
     ).all()
 
 
@@ -78,17 +76,15 @@ def query_story(id):
 
 
 async def get_all_stories():
-    return [
-        await get_top_stories(count=MAX_STORY_COUNT),
-        await get_new_stories(count=MAX_STORY_COUNT),
-    ]
+    return await get_top_stories(count=MAX_STORY_COUNT), await get_new_stories(
+        count=MAX_STORY_COUNT
+    )
 
 
 async def get_top_stories(count):
     return await get_stories(
         url="https://hacker-news.firebaseio.com/v0/topstories.json",
         count=count,
-        db_table="top_stories",
         db_object=TopStory,
     )
 
@@ -97,11 +93,11 @@ async def get_new_stories(count):
     return await get_stories(
         url="https://hacker-news.firebaseio.com/v0/newstories.json",
         count=count,
-        db_table="new_stories",
+        db_object=NewStory,
     )
 
 
-async def get_stories(url, count, db_table, db_object=None):
+async def get_stories(url, count, db_object=None):
     global UPDATE_DB
     tasks, stories = [], []
     # 500 is the max items the Hacker News API returns
@@ -135,39 +131,36 @@ async def async_fetch_item(client_session, item_id):
     return await res.json()
 
 
-def insert_stories_db(stories):
-    story_db_table_names = ["top_stories", "new_stories"]
+def insert_stories_db(top_stories, new_stories):
     db.session.execute(db.delete(TopStory))  # Table is of newest top 500 stories
 
-    for story_db_table_name, stories in zip(story_db_table_names, stories):
-        for num, story in enumerate(stories):
-            try:
-                if story_db_table_name == "top_stories":
-                    top_story = TopStory.find_item(story["id"])
-                    if not top_story:
-                        top_story = TopStory(
-                            id=story["id"],
-                            title=story["title"],
-                            score=story["score"],
-                            time=story["time"],
-                            author=story["by"],
-                            url=story["url"] if "url" in story else "",
-                            order_num=num,
-                        )
-                        db.session.add(top_story)
-                    db.session.commit()
-                elif story_db_table_name == "new_stories":
-                    new_story = NewStory.find_item(story["id"])
-                    if not new_story:
-                        new_story = NewStory(
-                            id=story["id"],
-                            title=story["title"],
-                            score=story["score"],
-                            time=story["time"],
-                            author=story["by"],
-                            url=story["url"] if "url" in story else "",
-                        )
-                        db.session.add(new_story)
-                    db.session.commit()
-            except:
-                print(f"Couldn't insert story {num}.")
+    for num, story in enumerate(top_stories):
+        top_story = TopStory.find_item(story["id"])
+        if not top_story:
+            top_story = TopStory(
+                id=story.get("id"),
+                title=story.get("title"),
+                score=story.get("score"),
+                time=story.get("time"),
+                author=story.get("by"),
+                url=story.get("url", ""),
+                order_num=num,
+                num_comments=story.get("descendants", 0),
+            )
+            db.session.add(top_story)
+        db.session.commit()
+
+    for story in new_stories:
+        new_story = NewStory.find_item(story["id"])
+        if not new_story:
+            new_story = NewStory(
+                id=story.get("id"),
+                title=story.get("title"),
+                score=story.get("score"),
+                time=story.get("time"),
+                author=story.get("by"),
+                url=story.get("url", ""),
+                num_comments=story.get("descendants", 0),
+            )
+            db.session.add(new_story)
+        db.session.commit()

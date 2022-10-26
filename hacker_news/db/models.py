@@ -16,18 +16,12 @@ class User(SearchMixin, db.Model):
     name = db.Column(db.String)
     nickname = db.Column(db.String)
 
-    def __init__(self, id, email, name, nickname):
-        self.id = id
-        self.email = email
-        self.name = name
-        self.nickname = nickname
-
     def __repr__(self):
         return f"<User {self.email}>"
 
 
-class StoryModel(SearchMixin, db.Model):
-    __abstract__ = True
+class Story(SearchMixin, db.Model):
+    __abstract__ = True  # Prevents table from being created
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
@@ -35,33 +29,44 @@ class StoryModel(SearchMixin, db.Model):
     time = db.Column(db.Integer)
     author = db.Column(db.String)
     url = db.Column(db.String)
+    num_comments = db.Column(db.Integer)
 
     def __repr__(self):
         return f"<ID {self.id}> {self.title}"
 
 
-class NewStory(StoryModel):
+class NewStory(Story):
     __tablename__ = "new_stories"
 
-    def __init__(self, id, title, score, time, author, url):
-        self.id = id
-        self.title = title
-        self.score = score
-        self.time = time
-        self.author = author
-        self.url = url
+    comments = db.relationship("NewComment")
 
 
-class TopStory(StoryModel):
+class TopStory(Story):
     __tablename__ = "top_stories"
 
     order_num = db.Column(db.Integer)
+    comments = db.relationship("TopComment")
 
-    def __init__(self, id, title, score, time, author, url, order_num):
-        self.id = id
-        self.title = title
-        self.score = score
-        self.time = time
-        self.author = author
-        self.url = url
-        self.order_num = order_num
+
+class Comment(SearchMixin, db.Model):
+    __abstract__ = True  # Prevents table from being created
+
+    id = db.Column(db.Integer, primary_key=True)
+    time = db.Column(db.Integer)
+    author = db.Column(db.String)
+    text = db.Column(db.String)
+
+    def __repr__(self):
+        return f"<ID {self.id}> {self.text}"
+
+
+class NewComment(Comment):
+    __tablename__ = "new_comments"
+
+    story_id = db.Column(db.Integer, db.ForeignKey("new_stories.id"))
+
+
+class TopComment(Comment):
+    __tablename__ = "top_comments"
+
+    story_id = db.Column(db.Integer, db.ForeignKey("top_stories.id"))
