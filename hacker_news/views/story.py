@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, g
 from flask_login import current_user
+
+from hacker_news.utilities.news_api import query_comments
 from ..utilities import query_story
 from .home import calculate_publish_time
 
@@ -14,5 +16,8 @@ def set_current_user(endpoint, values):
 @story.route("/<id>")
 def index(id):
     story = query_story(id)
+    comments = query_comments(id)
     publish_time = calculate_publish_time(story.time)
-    return render_template("story.html", story=story, publish_time=publish_time)
+    return render_template(
+        "story.html", story=story, comments=comments, publish_time=publish_time
+    )

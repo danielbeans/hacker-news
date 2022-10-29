@@ -14,3 +14,16 @@ body {
     color: inherit;
     text-decoration: underline;
 }
+
+.comments {
+    list-style: none;
+}
+
+.comments p {
+    margin: 0;
+}
+
+.comment-text a {
+    color: inherit;
+    list-style: none;
+}

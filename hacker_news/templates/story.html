@@ -1,28 +1,48 @@
-{% extends 'base.html' %} {% block title%} {{ story.title }} {% endblock %}{%
-block body %}
+{% extends 'base.html' %}
+{% block title%} {{ story.title }} {% endblock %}
+{%block body %}
 <table class="table table-striped">
     <tr>
         <td>
-            <div class="d-flex px-2">
+            <div class="px-2">
                 <div>
                     <div>
-                        <a class="fw-bold link-unstyled" href="{{ story.url }}"
-                            >{{ story.title }}</a
-                        >
+                        <a class="fw-bold link-unstyled" href="{{ story.url }}"> {{ story.title }} </a>
                     </div>
                     <small>
-                        {{ story.score }} points by {{ story.author }} {% if
-                        publish_time > 60 %} {{ publish_time // 60}} hours ago |
-                        {% else %} {{ publish_time }} minutes ago | {% endif %}
+                        {{ story.score }} points by {{ story.author }}
+                        {% if publish_time > 60 %} {{ publish_time // 60}} hours ago |
+                        {% else %} {{ publish_time }} minutes ago |
+                        {% endif %}
                         <a
                             class="link-unstyled"
                             href="{{ url_for('story.index', id=story.id) }}"
-                            >{{ story.num_comments }} comments</a
-                        >
+                            >{{ story.num_comments }} comments
+                        </a>
                     </small>
                 </div>
             </div>
         </td>
     </tr>
-    {% endblock body %}
 </table>
+<h3>Comments</h3>
+<ul class="list-group comments">
+    {% for comment in comments recursive%}
+        <li>
+            <div class="mb-3 border-top">
+                <div>
+                    <small class="text-secondary">{{ comment.author }}</small>
+                </div>
+                <div>
+                    <small class="comment-text">{{ comment.text|safe }}</small>
+                </div>
+            </div>
+            {% if comment.comments %}
+                <ul class="comments">
+                    {{ loop(comment.comments) }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+{% endblock body %}
