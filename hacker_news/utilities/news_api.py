@@ -7,7 +7,7 @@ from os.path import exists
 import asyncio
 import aiohttp
 
-MAX_STORY_COUNT = 30
+MAX_STORY_COUNT = 500
 # Enables or disables API query and database insertion of duplicate items in database
 UPDATE_DB = False
 IDS_QUERIED = 0
@@ -18,14 +18,14 @@ async def create_data():
     top_stories, new_stories = await get_all_stories()
     insert_stories_db(top_stories=top_stories, new_stories=new_stories)
 
-    # Insert Comments into database
-    top_comments = [
-        await get_comments(top_story) for top_story in top_stories
-    ]  # List of lists of dicts
-    new_comments = [
-        await get_comments(new_story) for new_story in new_stories
-    ]  # List of lists of dicts
-    insert_comments_db(top_comments=top_comments, new_comments=new_comments)
+    # # Insert Comments into database
+    # top_comments = [
+    #     await get_comments(top_story) for top_story in top_stories
+    # ]  # List of lists of dicts
+    # new_comments = [
+    #     await get_comments(new_story) for new_story in new_stories
+    # ]  # List of lists of dicts
+    # insert_comments_db(top_comments=top_comments, new_comments=new_comments)
 
 
 # Updates database story data, used in 'get_new_api_data' APScheduler task
@@ -131,7 +131,7 @@ async def get_stories(url, count, db_object=None):
 
     story_ids: list = requests.get(url).json()  # Fetch id's from Hacker News API
 
-    async with aiohttp.ClientSession() as client_session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as client_session:
         for story_id in story_ids[:count]:
             story_found = None
             if db_object:
