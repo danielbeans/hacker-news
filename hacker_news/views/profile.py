@@ -14,5 +14,5 @@ def set_current_user(endpoint, values):
 @login_required
 def index(username):
     if username.lower() != g.current_user.nickname.lower():
-        return redirect(url_for(request.referrer or "home.index"))
+        return redirect(url_for("home.index"))
     return render_template("profile.html", profile=username)

@@ -1,6 +1,24 @@
 body {
-    padding: 0% 10%;
     height: 100vh;
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 992px) {
+    body {
+        padding: 0% 10%;
+        height: 100vh;
+    }
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (max-width: 576px) {
+    #welcome_message {
+        display: none;
+    }
+}
+
+#navigation_bar .nav-link {
+    margin-right: 10px;
 }
 
 .link-unstyled,
@@ -26,4 +44,59 @@ body {
 .comment-text a {
     color: inherit;
     list-style: none;
+}
+
+#login_alert {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+.bi-caret-up {
+    color: green;
+    scale: 1.3;
+    bottom: 0;
+    position: relative;
+    transition: bottom ease 0.25s;
+}
+
+.bi-caret-up:hover {
+    bottom: 2px;
+}
+
+.bi-caret-up-fill {
+    color: green;
+    scale: 1.3;
+    bottom: 0;
+    position: relative;
+    transition: bottom ease 0.25s;
+}
+
+.bi-caret-up-fill:hover {
+    bottom: 2px;
+}
+
+.bi-caret-down {
+    color: orange;
+    scale: 1.3;
+    top: 0;
+    position: relative;
+    transition: top ease 0.25s;
+}
+
+.bi-caret-down:hover {
+    top: 2px;
+}
+
+.bi-caret-down-fill {
+    color: orange;
+    scale: 1.3;
+    top: 0;
+    position: relative;
+    transition: top ease 0.25s;
+}
+
+.bi-caret-down-fill:hover {
+    top: 2px;
 }

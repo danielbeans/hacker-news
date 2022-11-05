@@ -1,11 +1,10 @@
-from flask_login import LoginManager, UserMixin, login_user
-from flask import current_app
+from flask_login import LoginManager, login_user
+from flask import redirect, url_for, request, session
 from uuid import uuid4
-from flask import session
 from ..db import db, User
 from authlib.integrations.flask_client import OAuth
-from dotenv import load_dotenv
 import os
+from urllib.parse import urlparse
 
 login_manager = LoginManager()
 oauth = OAuth()
@@ -30,7 +29,19 @@ def init_oauth(oauth):
 # Callback route to reload user from userID in session
 @login_manager.user_loader
 def load_user(id):
-    return UserLogin.get(id)
+    return User.find_item(id)
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    url_redirect = None
+    if request.referrer:
+        url_redirect = request.referrer
+        # Remove parameters to prevent duplicate login_required
+        url_redirect = url_redirect.replace("?" + urlparse(request.referrer).query, "")
+        url_redirect += "?login_required=true"
+
+    return redirect(url_redirect or url_for("home.index", login_required="true"))
 
 
 # Logic to login user with query to database
@@ -57,18 +68,4 @@ def session_login(token):
     db.session.commit()
 
     session["is_authenticated"] = True
-    return login_user(UserLogin(user))
-
-
-class UserLogin(UserMixin):
-    def __init__(self, user):
-        self.id = user.id
-        self.name = user.name
-        self.nickname = user.nickname
-        self.email = user.email
-
-    def __repr__(self):
-        return "%s %s %s" % (self.id, self.name, self.email)
-
-    def get(id):
-        return UserLogin(User.find_item(id))
+    return login_user(user)

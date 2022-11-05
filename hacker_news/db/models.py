@@ -1,4 +1,5 @@
 from . import db
+from flask_login import UserMixin
 
 
 class SearchMixin:
@@ -7,17 +8,69 @@ class SearchMixin:
         item = db.session.scalars(db.select(cls).filter_by(id=id)).one_or_none()
         return item
 
+    @classmethod
+    def get_all(cls):
+        items = db.session.scalars(db.select(cls)).all()
+        return items
 
-class User(SearchMixin, db.Model):
+
+class WebsiteSetting(SearchMixin, db.Model):
+    __tablename__ = "website_settings"
+
+    id = db.Column(db.String, primary_key=True)
+    status = db.Column(db.String, default="")
+
+
+class User(UserMixin, SearchMixin, db.Model):
     __tablename__ = "user"
 
     id = db.Column(db.String, primary_key=True)
     email = db.Column(db.String, unique=True)
     name = db.Column(db.String)
     nickname = db.Column(db.String)
+    liked_top_stories = db.relationship("TopStoryAssociation", backref="user")
+    liked_new_stories = db.relationship("NewStoryAssociation", backref="user")
 
     def __repr__(self):
-        return f"<User {self.email}>"
+        return f"<User {self.id} {self.name} {self.email}>"
+
+    def like_story(self, story_id, story_type, action, status):
+        user = User.find_item(self.id)
+        if story_type == "top_story":
+            with db.session.no_autoflush:
+                if found_story_association := self.has_liked_story(story_id):
+                    db.session.delete(found_story_association)
+                    db.session.commit()
+                if action == "add":
+                    liked = TopStoryAssociation(status=status)
+                    liked.story = TopStory.find_item(story_id)
+                    user.liked_top_stories.append(liked)
+        elif story_type == "new_story":
+            with db.session.no_autoflush:
+                if found_story_association := self.has_liked_story(story_id):
+                    db.session.delete(found_story_association)
+                    db.session.commit()
+                if action == "add":
+                    liked = NewStoryAssociation(status=status)
+                    liked.story = NewStory.find_item(story_id)
+                    user.liked_new_stories.append(liked)
+                db.session.commit()
+        db.session.commit()
+
+    def has_liked_story(self, story_id):
+        top_story = db.session.scalars(
+            db.select(TopStoryAssociation).filter(
+                TopStoryAssociation.user_id.like(self.id),
+                TopStoryAssociation.story_id.like(story_id),
+            )
+        ).one_or_none()
+        new_story = db.session.scalars(
+            db.select(NewStoryAssociation).filter(
+                NewStoryAssociation.user_id.like(self.id),
+                NewStoryAssociation.story_id.like(story_id),
+            )
+        ).one_or_none()
+        return top_story or new_story
 
 
 class Story(SearchMixin, db.Model):
@@ -50,6 +103,32 @@ class TopStory(Story):
     comments = db.relationship(
         "TopComment", cascade="all, delete, delete-orphan", backref="story"
     )
+
+
+# For like/dislike functionality
+class TopStoryAssociation(SearchMixin, db.Model):
+    __tablename__ = "top_story_association_table"
+
+    user_id = db.Column(db.ForeignKey("user.id"), primary_key=True)
+    story_id = db.Column(db.ForeignKey("top_stories.id"), primary_key=True)
+    story = db.relationship("TopStory", backref="story")
+    status = db.Column(db.String)
+
+    def __repr__(self):
+        return f"<TopStoryID: {self.user_id}> {self.story_id}"
+
+
+# For like/dislike functionality
+class NewStoryAssociation(SearchMixin, db.Model):
+    __tablename__ = "new_story_association_table"
+
+    user_id = db.Column(db.ForeignKey("user.id"), primary_key=True)
+    story_id = db.Column(db.ForeignKey("new_stories.id"), primary_key=True)
+    story = db.relationship("NewStory", backref="story")
+    status = db.Column(db.String)
+
+    def __repr__(self):
+        return f"<NewStoryID: {self.user_id}> {self.story_id}"
 
 
 class Comment(SearchMixin, db.Model):

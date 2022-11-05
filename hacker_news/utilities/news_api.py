@@ -1,13 +1,23 @@
 import requests
-from ..db import db, TopStory, NewStory, TopComment, NewComment
+from ..db import (
+    db,
+    User,
+    TopStory,
+    NewStory,
+    TopComment,
+    NewComment,
+    TopStoryAssociation,
+    WebsiteSetting,
+)
 import click
 from flask.cli import with_appcontext
 from time import time
 from os.path import exists
 import asyncio
 import aiohttp
+from flask_login import current_user
 
-MAX_STORY_COUNT = 500
+MAX_STORY_COUNT = 30
 # Enables or disables API query and database insertion of duplicate items in database
 UPDATE_DB = False
 IDS_QUERIED = 0
@@ -18,14 +28,16 @@ async def create_data():
     top_stories, new_stories = await get_all_stories()
     insert_stories_db(top_stories=top_stories, new_stories=new_stories)
 
-    # # Insert Comments into database
-    # top_comments = [
-    #     await get_comments(top_story) for top_story in top_stories
-    # ]  # List of lists of dicts
-    # new_comments = [
-    #     await get_comments(new_story) for new_story in new_stories
-    # ]  # List of lists of dicts
-    # insert_comments_db(top_comments=top_comments, new_comments=new_comments)
+    # Insert Comments into database
+    if toggle := WebsiteSetting.find_item("toggle_comments"):
+        if toggle.status == "true":
+            top_comments = [
+                await get_comments(top_story) for top_story in top_stories
+            ]  # List of lists of dicts
+            new_comments = [
+                await get_comments(new_story) for new_story in new_stories
+            ]  # List of lists of dicts
+            insert_comments_db(top_comments=top_comments, new_comments=new_comments)
 
 
 # Updates database story data, used in 'get_new_api_data' APScheduler task
@@ -66,7 +78,7 @@ def add_create_data_command(app):
 
 def query_top_stories(count=1):
     return db.session.scalars(
-        db.select(TopStory).order_by(TopStory.order_num).limit(count)
+        db.select(TopStory).order_by(TopStory.order_num.desc()).limit(count)
     ).all()
 
 
@@ -92,6 +104,17 @@ def query_comments(story_id):
     ).all()
 
     return top_comments or new_comments
+
+
+def query_liked_stories(story_id):
+    liked_top_stories = db.session.scalars(
+        db.select(TopComment).filter_by(story_id=story_id)
+    ).all()
+    liked_new_stories = db.session.scalars(
+        db.select(NewComment).filter_by(story_id=story_id)
+    ).all()
+
+    return liked_top_stories or liked_new_stories
 
 
 #####################################################
@@ -131,7 +154,9 @@ async def get_stories(url, count, db_object=None):
 
     story_ids: list = requests.get(url).json()  # Fetch id's from Hacker News API
 
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as client_session:
+    async with aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(verify_ssl=False)
+    ) as client_session:
         for story_id in story_ids[:count]:
             story_found = None
             if db_object:
@@ -192,9 +217,10 @@ async def async_fetch_item(client_session, item_id):
 
 
 def insert_stories_db(top_stories, new_stories):
-    db.session.execute(db.delete(TopStory))  # Table is of newest top 500 stories
+    # Guarantees order of top stories is correct
+    num_top_story_rows = db.session.query(TopStory).count()
 
-    for num, story in enumerate(top_stories):
+    for num, story in enumerate(top_stories[::-1]):
         top_story = TopStory.find_item(story["id"])
         if (top_story and UPDATE_DB) or not top_story:
             top_story = db.session.merge(
@@ -205,7 +231,7 @@ def insert_stories_db(top_stories, new_stories):
                     time=story.get("time"),
                     author=story.get("by"),
                     url=story.get("url", ""),
-                    order_num=num,
+                    order_num=num + num_top_story_rows,
                     num_comments=story.get("descendants", 0),
                 )
             )
