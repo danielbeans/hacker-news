@@ -6,6 +6,18 @@
 
 ### Development
 
+## Mid-semeseter Project Evaluation
+
+**Due: 11.4.22**
+
+### Updates and Upgrades
+
+When we need to upgrade or update our application or machine, we can point to another VM in our Azure group.
+
+### Config
+
+Configurations for the machine can be found at `/configs`.
+
 ## Homework 1
 
 **Due: 10.20.22**
