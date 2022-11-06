@@ -12,14 +12,25 @@ home = Blueprint("home", __name__)
 
 def zip_stories(stories):
     """
-    Calculates a story order number and publish time and zips them with their story
+    Calculates a story order number, publish time, and like/dislike status and zips them with their story
     Arguments:
         stories: An list of TopStory or NewStory objects
     Returns:
         A zip object with tuples (order number, story, publish time)
     """
-    publish_times = [calculate_publish_time(story.time) for story in stories]
-    return zip(range(1, len(stories) + 1), stories, publish_times)
+    publish_times, like_statuses = [], []
+    for story in stories:
+        publish_times.append(calculate_publish_time(story.time))
+        if current_user.is_authenticated:
+            liked_story = current_user.has_liked_story(story.id)
+            if liked_story:
+                like_statuses.append(liked_story.type)
+            else:
+                like_statuses.append(None)
+        else:
+            like_statuses.append(None)
+
+    return zip(range(1, len(stories) + 1), stories, publish_times, like_statuses)
 
 
 def calculate_publish_time(timestamp):
@@ -41,6 +52,7 @@ def set_current_user(endpoint, values):
 @home.route("/")
 def index():
     num_stories = 30
+    # g.current_user.has_liked_story("33448722")
 
     numbered_top_stories = zip_stories(stories=query_top_stories(num_stories))
     numbered_new_stories = zip_stories(stories=query_new_stories(num_stories))

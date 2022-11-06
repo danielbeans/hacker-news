@@ -34,7 +34,7 @@ class User(UserMixin, SearchMixin, db.Model):
     def __repr__(self):
         return f"<User {self.id} {self.name} {self.email}>"
 
-    def like_story(self, story_id, story_type, action, status):
+    def like_story(self, story_id, story_type, action, type):
         user = User.find_item(self.id)
         if story_type == "top_story":
             with db.session.no_autoflush:
@@ -42,7 +42,7 @@ class User(UserMixin, SearchMixin, db.Model):
                     db.session.delete(found_story_association)
                     db.session.commit()
                 if action == "add":
-                    liked = TopStoryAssociation(status=status)
+                    liked = TopStoryAssociation(type=type)
                     liked.story = TopStory.find_item(story_id)
                     user.liked_top_stories.append(liked)
         elif story_type == "new_story":
@@ -51,7 +51,7 @@ class User(UserMixin, SearchMixin, db.Model):
                     db.session.delete(found_story_association)
                     db.session.commit()
                 if action == "add":
-                    liked = NewStoryAssociation(status=status)
+                    liked = NewStoryAssociation(type=type)
                     liked.story = NewStory.find_item(story_id)
                     user.liked_new_stories.append(liked)
                 db.session.commit()
@@ -112,7 +112,7 @@ class TopStoryAssociation(SearchMixin, db.Model):
     user_id = db.Column(db.ForeignKey("user.id"), primary_key=True)
     story_id = db.Column(db.ForeignKey("top_stories.id"), primary_key=True)
     story = db.relationship("TopStory", backref="story")
-    status = db.Column(db.String)
+    type = db.Column(db.String)
 
     def __repr__(self):
         return f"<TopStoryID: {self.user_id}> {self.story_id}"
@@ -125,7 +125,7 @@ class NewStoryAssociation(SearchMixin, db.Model):
     user_id = db.Column(db.ForeignKey("user.id"), primary_key=True)
     story_id = db.Column(db.ForeignKey("new_stories.id"), primary_key=True)
     story = db.relationship("NewStory", backref="story")
-    status = db.Column(db.String)
+    type = db.Column(db.String)
 
     def __repr__(self):
         return f"<NewStoryID: {self.user_id}> {self.story_id}"

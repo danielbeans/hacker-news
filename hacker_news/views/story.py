@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, g, request, redirect, url_for
+from flask import Blueprint, render_template, g
 from flask_login import current_user, login_required
 
 from hacker_news.utilities.news_api import query_comments
@@ -23,11 +23,11 @@ def index(id):
     )
 
 
-@story.route("/<status>/<action>")
+@story.route("/<type>/<action>")
 @login_required
-def like(id, status, action):
+def like(id, type, action):
     action = action.lower()
-    status = status.lower()
+    type = type.lower()
 
     story_type = "top_story"
     if NewStory.find_item(id):
@@ -35,11 +35,11 @@ def like(id, status, action):
 
     if action == "add":
         current_user.like_story(
-            story_id=id, story_type=story_type, action=action, status=status
+            story_id=id, story_type=story_type, action=action, type=type
         )
     elif action == "remove":
         current_user.like_story(
-            story_id=id, story_type=story_type, action=action, status=status
+            story_id=id, story_type=story_type, action=action, type=type
         )
 
-    return redirect(request.referrer or url_for("story.index", id=id))
+    return {"type": type, "action": action, "status": "success"}
