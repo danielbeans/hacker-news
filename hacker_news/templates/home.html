@@ -52,8 +52,8 @@
         tabindex="0"
     >
         <table class="table table-striped table-hover">
-            {% for count, story, publish_time, like_status in top_stories %}
-            <tr>
+            {% for count, story, publish_time, like_status in top_stories %}        
+            <tr onclick="click_story({{ story.id }})">
                 <td>
                     <div class="d-flex px-2">
                         <div class="pe-2"># {{ count }}</div>
@@ -192,12 +192,17 @@
     </div>
 </div>
 <script>
+    const click_story = (story_id) => {
+        window.location.replace(`/story/${story_id}`);
+    };
+
     /* Function for triggering visual updates*/
     const toggle_refresh = () => {
         refresh_icon = document.getElementById("refresh_icon");
         refresh_icon.style.display = "";
     };
 
+    /* Returns bool of if login is required */
     const get_login_required = (res) => {
         params = (new URL(res.url)).searchParams;
         url_params = new URLSearchParams(params);

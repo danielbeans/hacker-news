@@ -1,10 +1,11 @@
-from flask_login import LoginManager, login_user
-from flask import redirect, url_for, request, session
+from flask_login import LoginManager, login_user, current_user
+from flask import redirect, url_for, request, session, current_app
 from uuid import uuid4
 from ..db import db, User
 from authlib.integrations.flask_client import OAuth
 import os
 from urllib.parse import urlparse
+from functools import wraps
 
 login_manager = LoginManager()
 oauth = OAuth()
@@ -63,9 +64,39 @@ def session_login(token):
             email=user_info["email"],
             name=user_info["name"],
             nickname=user_nickname,
+            role="member",
         )
         db.session.add(user)
     db.session.commit()
 
     session["is_authenticated"] = True
     return login_user(user)
+
+
+def admin_required(func):
+    """
+    Decorate a view to ensure the current user has an admin role
+
+    :param func: The view function to decorate.
+    :type func: function
+    """
+
+    @wraps(func)
+    def decorated_view(*args, **kwargs):
+        if not current_user.role == "admin":
+            url_redirect = None
+            if request.referrer:
+                url_redirect = request.referrer
+                # Remove parameters to prevent duplicate login_required
+                url_redirect = url_redirect.replace(
+                    "?" + urlparse(request.referrer).query, ""
+                )
+                url_redirect += "?admin_required=true"
+
+            return redirect(
+                url_redirect or url_for("home.index", admin_required="true")
+            )
+
+        return func(*args, **kwargs)
+
+    return decorated_view

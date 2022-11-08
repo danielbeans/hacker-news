@@ -2,7 +2,7 @@ body {
     height: 100vh;
 }
 
-/* Medium devices (landscape tablets, 768px and up) */
+/* 992px and up */
 @media only screen and (min-width: 992px) {
     body {
         padding: 0% 10%;
@@ -10,15 +10,18 @@ body {
     }
 }
 
-/* Medium devices (landscape tablets, 768px and up) */
+/* 992px and below */
+@media only screen and (max-width: 992px) {
+    #navigation_bar .nav-link {
+        margin-right: 10px;
+    }
+}
+
+/* 576px and below */
 @media only screen and (max-width: 576px) {
     #welcome_message {
         display: none;
     }
-}
-
-#navigation_bar .nav-link {
-    margin-right: 10px;
 }
 
 .link-unstyled,

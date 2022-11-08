@@ -7,7 +7,7 @@
             <div class="px-2">
                 <div>
                     <div>
-                        <a class="fw-bold link-unstyled" href="{{ story.url }}"> {{ story.title }} </a>
+                        <a class="fw-bold link-unstyled" href="{{ story.url }}">{{ story.title }} </a>
                     </div>
                     <small>
                         {{ story.score }} points by {{ story.author }}
@@ -25,7 +25,7 @@
         </td>
     </tr>
 </table>
-<h3 class="ms-2">Comments</h3>
+<h3 class="ms-2"><strong>Comments</strong></h3>
 <ul class="list-group comments">
     {% for comment in comments recursive%}
         <li>

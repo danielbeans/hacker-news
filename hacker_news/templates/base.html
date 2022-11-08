@@ -27,6 +27,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     {% endif %}
+    {# Dialog box telling users they need an admin role to access functionality #}
+    {% if request.args.get("admin_required") and not g.current_user.role == "admin" %}
+    <div id="login_alert" class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+        <strong>Admin access required</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
     <body>
         <!-- Navigation Bar -->
         {% set active_page = active_page|default('index') %}
@@ -66,6 +73,21 @@
                                 class="nav-link"
                                 href="{{ url_for('profile.index', username=g.current_user.nickname) }}"
                                 >Profile</a
+                            >
+                            {% endif %}
+                        {% endif %}
+                        {% if g.current_user.role == "admin" %}
+                            {% if "admin" == active_page %}
+                            <a
+                                class="nav-link active"
+                                href="{{ url_for('admin.index') }}"
+                                >Admin</a
+                            >
+                            {% else %}
+                            <a
+                                class="nav-link"
+                                href="{{ url_for('admin.index') }}"
+                                >Admin</a
                             >
                             {% endif %}
                         {% endif %}

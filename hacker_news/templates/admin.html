@@ -1,3 +1,12 @@
-{% extends 'base.html' %} {% block body %}
-<h1>{% block title%} Admin {% endblock %}</h1>
+{% extends 'base.html' %}
+{% set active_page = "admin" %}
+{% block body %}
+<h1 class="text-center pt-5 pb-2">
+    <strong>
+    {% block title%}Admin{% endblock %}
+    </strong>
+</h1>
+<div class="bg-secondary rounded p-4" style="--bs-bg-opacity: .1;">
+<h3>Liked Stories</h3>
+</div>
 {% endblock body %}

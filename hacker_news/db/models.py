@@ -28,6 +28,7 @@ class User(UserMixin, SearchMixin, db.Model):
     email = db.Column(db.String, unique=True)
     name = db.Column(db.String)
     nickname = db.Column(db.String)
+    role = db.Column(db.String)
     liked_top_stories = db.relationship("TopStoryAssociation", backref="user")
     liked_new_stories = db.relationship("NewStoryAssociation", backref="user")
 
