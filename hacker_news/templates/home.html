@@ -32,16 +32,6 @@
         >
             Top Stories
         </a>
-        <a
-            class="nav-link"
-            id="nav-new-tab"
-            data-bs-toggle="tab"
-            type="button"
-            role="tab"
-            href="#new_stories"
-        >
-            New Stories
-        </a>
     </div>
 </nav>
 <div class="tab-content" id="nav-tabContent">
@@ -52,77 +42,7 @@
         tabindex="0"
     >
         <table class="table table-striped table-hover">
-            {% for count, story, publish_time, like_status in top_stories %}        
-            <tr onclick="click_story({{ story.id }})">
-                <td>
-                    <div class="d-flex px-2">
-                        <div class="pe-2"># {{ count }}</div>
-                        <div class="d-flex flex-column px-2">
-                        {% if like_status == "like" %}
-                            <i id="like" class="liked bi bi-caret-up-fill"
-                                onmouseover="hover_like(this)"
-                                onmouseout="unhover_like(this)"
-                                onclick="toggle_like(this, {{ story.id }})"
-                            ></i>
-                            <i id="dislike" class="bi bi-caret-down"
-                                onmouseover="hover_dislike(this)"
-                                onmouseout="unhover_dislike(this)"
-                                onclick="toggle_dislike(this, {{ story.id }})"
-                            ></i>
-                        {% elif like_status == "dislike" %}
-                            <i id="like" class="bi bi-caret-up"
-                                onmouseover="hover_like(this)"
-                                onmouseout="unhover_like(this)"
-                                onclick="toggle_like(this, {{ story.id }})"
-                            ></i>
-                            <i id="dislike" class="disliked bi bi-caret-down-fill"
-                                onmouseover="hover_dislike(this)"
-                                onmouseout="unhover_dislike(this)"
-                                onclick="toggle_dislike(this, {{ story.id }})"
-                            ></i>
-                        {% else %}
-                            <i id="like" class="bi bi-caret-up"
-                                onmouseover="hover_like(this)"
-                                onmouseout="unhover_like(this)"
-                                onclick="toggle_like(this, {{ story.id }})"
-                            ></i>
-                            <i id="dislike" class="bi bi-caret-down"
-                                onmouseover="hover_dislike(this)"
-                                onmouseout="unhover_dislike(this)"
-                                onclick="toggle_dislike(this, {{ story.id }})"
-                            ></i>
-                        {% endif %}
-                        </div>
-                        <div>
-                            <div>
-                                <a
-                                    class="fw-bold link-unstyled"
-                                    href="{{ story.url }}"
-                                    >{{ story.title }}</a
-                                >
-                            </div>
-                            <small>
-                                {{ story.score }} points by {{ story.author }}
-                                {% if publish_time > 60 %}
-                                {{ publish_time // 60}} hours ago |
-                                {% else %} {{ publish_time }} minutes ago |
-                                {% endif %}
-                                <a
-                                    class="link-unstyled"
-                                    href="{{ url_for('story.index', id=story.id) }}"
-                                    >{{ story.num_comments }} comments</a
-                                >
-                            </small>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    <div class="tab-pane fade" id="new_stories" role="tabpanel" tabindex="0">
-        <table class="table table-striped">
-            {% for count, story, publish_time, like_status in new_stories %}
+            {% for count, story, publish_time, like_status in stories %}        
             <tr>
                 <td>
                     <div class="d-flex px-2">
@@ -163,7 +83,7 @@
                             ></i>
                         {% endif %}
                         </div>
-                        <div>
+                        <div class="flex-grow-1" onclick="click_story({{ story.id }})">
                             <div>
                                 <a
                                     class="fw-bold link-unstyled"
@@ -266,7 +186,7 @@
 
         fetch(url).then((res) => {
             if (get_login_required(res)) {
-                window.location.replace(res.url);
+                window.location.href(res.url);
             }
         });
     }

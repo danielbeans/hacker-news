@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, g
 from flask_login import current_user, login_required
 
 from hacker_news.utilities.news_api import query_comments
-from ..utilities import query_story, TopStory, NewStory
+from ..utilities import query_story
 from .home import calculate_publish_time
 
 story = Blueprint("story", __name__, url_prefix="/story/<id>")
@@ -29,17 +29,9 @@ def like(id, type, action):
     action = action.lower()
     type = type.lower()
 
-    story_type = "top_story"
-    if NewStory.find_item(id):
-        story_type = "new_story"
-
     if action == "add":
-        current_user.like_story(
-            story_id=id, story_type=story_type, action=action, type=type
-        )
+        current_user.like_story(story_id=id, action=action, type=type)
     elif action == "remove":
-        current_user.like_story(
-            story_id=id, story_type=story_type, action=action, type=type
-        )
+        current_user.like_story(story_id=id, action=action, type=type)
 
     return {"type": type, "action": action, "status": "success"}

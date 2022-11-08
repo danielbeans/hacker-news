@@ -2,11 +2,9 @@ import requests
 from ..db import (
     db,
     User,
-    TopStory,
-    NewStory,
-    TopComment,
-    NewComment,
-    TopStoryAssociation,
+    Story,
+    Comment,
+    StoryAssociation,
     WebsiteSetting,
 )
 import click
@@ -25,19 +23,16 @@ IDS_QUERIED = 0
 # Populates database with story and comment data, used in 'create-data' flask command
 async def create_data():
     # Insert Stories into database
-    top_stories, new_stories = await get_all_stories()
-    insert_stories_db(top_stories=top_stories, new_stories=new_stories)
+    stories = await get_top_stories(count=MAX_STORY_COUNT)
+    insert_stories_db(stories=stories)
 
     # Insert Comments into database
     if toggle := WebsiteSetting.find_item("toggle_comments"):
         if toggle.status == "true":
-            top_comments = [
-                await get_comments(top_story) for top_story in top_stories
+            comments = [
+                await get_comments(story) for story in stories
             ]  # List of lists of dicts
-            new_comments = [
-                await get_comments(new_story) for new_story in new_stories
-            ]  # List of lists of dicts
-            insert_comments_db(top_comments=top_comments, new_comments=new_comments)
+            insert_comments_db(comments=comments)
 
 
 # Updates database story data, used in 'get_new_api_data' APScheduler task
@@ -78,43 +73,26 @@ def add_create_data_command(app):
 
 def query_top_stories(count=1):
     return db.session.scalars(
-        db.select(TopStory).order_by(TopStory.order_num.desc()).limit(count)
-    ).all()
-
-
-def query_new_stories(count=1):
-    return db.session.scalars(
-        db.select(NewStory).order_by(NewStory.time.desc()).limit(count)
+        db.select(Story).order_by(Story.order_num.desc()).limit(count)
     ).all()
 
 
 def query_story(id):
-    top_story = db.session.scalars(db.select(TopStory).filter_by(id=id)).one_or_none()
-    new_story = db.session.scalars(db.select(NewStory).filter_by(id=id)).one_or_none()
-
-    return top_story or new_story
+    story = db.session.scalars(db.select(Story).filter_by(id=id)).one_or_none()
+    return story
 
 
 def query_comments(story_id):
-    top_comments = db.session.scalars(
-        db.select(TopComment).filter_by(story_id=story_id)
-    ).all()
-    new_comments = db.session.scalars(
-        db.select(NewComment).filter_by(story_id=story_id)
-    ).all()
-
-    return top_comments or new_comments
+    comments = db.session.scalars(db.select(Comment).filter_by(story_id=story_id)).all()
+    return comments
 
 
 def query_liked_stories(story_id):
-    liked_top_stories = db.session.scalars(
-        db.select(TopComment).filter_by(story_id=story_id)
-    ).all()
-    liked_new_stories = db.session.scalars(
-        db.select(NewComment).filter_by(story_id=story_id)
+    liked_stories = db.session.scalars(
+        db.select(Comment).filter_by(story_id=story_id)
     ).all()
 
-    return liked_top_stories or liked_new_stories
+    return liked_stories
 
 
 #####################################################
@@ -124,29 +102,13 @@ def query_liked_stories(story_id):
 #####################################################
 
 
-async def get_all_stories():
-    return await get_top_stories(count=MAX_STORY_COUNT), await get_new_stories(
-        count=MAX_STORY_COUNT
-    )
-
-
 async def get_top_stories(count):
     return await get_stories(
-        url="https://hacker-news.firebaseio.com/v0/topstories.json",
-        count=count,
-        db_object=TopStory,
+        url="https://hacker-news.firebaseio.com/v0/topstories.json", count=count
     )
 
 
-async def get_new_stories(count):
-    return await get_stories(
-        url="https://hacker-news.firebaseio.com/v0/newstories.json",
-        count=count,
-        db_object=NewStory,
-    )
-
-
-async def get_stories(url, count, db_object=None):
+async def get_stories(url, count):
     global UPDATE_DB
     tasks, stories = [], []
     # 500 is the max items the Hacker News API returns
@@ -158,9 +120,7 @@ async def get_stories(url, count, db_object=None):
         connector=aiohttp.TCPConnector(verify_ssl=False)
     ) as client_session:
         for story_id in story_ids[:count]:
-            story_found = None
-            if db_object:
-                story_found = db_object.find_item(story_id)
+            story_found = Story.find_item(story_id)
             if (story_found and UPDATE_DB) or not story_found:
                 # Create asyncio tasks made up of a coroutine
                 tasks.append(
@@ -216,127 +176,68 @@ async def async_fetch_item(client_session, item_id):
     return await res.json()
 
 
-def insert_stories_db(top_stories, new_stories):
-    # Guarantees order of top stories is correct
-    num_top_story_rows = db.session.query(TopStory).count()
+def insert_stories_db(stories):
+    # Guarantees order of stories is correct
+    num_story_rows = db.session.query(Story).count()
 
-    for num, story in enumerate(top_stories[::-1]):
-        top_story = TopStory.find_item(story["id"])
-        if (top_story and UPDATE_DB) or not top_story:
-            top_story = db.session.merge(
-                TopStory(
+    for num, story in enumerate(stories[::-1]):
+        found_story = Story.find_item(story["id"])
+        if (found_story and UPDATE_DB) or not found_story:
+            found_story = db.session.merge(
+                Story(
                     id=story.get("id"),
                     title=story.get("title"),
                     score=story.get("score"),
                     time=story.get("time"),
                     author=story.get("by"),
                     url=story.get("url", ""),
-                    order_num=num + num_top_story_rows,
+                    order_num=num + num_story_rows,
                     num_comments=story.get("descendants", 0),
                 )
             )
-            db.session.add(top_story)
-
-    for story in new_stories:
-        new_story = NewStory.find_item(story["id"])
-        if (new_story and UPDATE_DB) or not new_story:
-            new_story = db.session.merge(
-                NewStory(
-                    id=story.get("id"),
-                    title=story.get("title"),
-                    score=story.get("score"),
-                    time=story.get("time"),
-                    author=story.get("by"),
-                    url=story.get("url", ""),
-                    num_comments=story.get("descendants", 0),
-                )
-            )
-            db.session.add(new_story)
-
+            db.session.add(found_story)
     db.session.commit()
 
 
-def insert_comments_db(top_comments, new_comments):
-    def insert_child_top_comments(parent_top_comment, parent_top_comment_object):
-        for comment in parent_top_comment["kids"]:
+def insert_comments_db(comments):
+    def insert_child_comments(parent_comment, parent_comment_object):
+        for comment in parent_comment["kids"]:
             # Have not been able to update comment information (SQLAlchemy's merge function is giving issues)
-            top_comment = TopComment.find_item(comment["id"])
-            if not comment.get("dead", False) and not top_comment:
-                top_comment = TopComment(
+            found_comment = Comment.find_item(comment["id"])
+            if not comment.get("dead", False) and not found_comment:
+                comment = Comment(
                     id=comment.get("id"),
                     time=comment.get("time"),
                     author=comment.get("by"),
                     text=comment.get("text"),
                     type="child",
-                    parent_comment=parent_top_comment_object,
+                    parent_comment=parent_comment_object,
                 )
-                db.session.add(top_comment)
+                db.session.add(comment)
 
                 if comment.get("kids"):
-                    insert_child_top_comments(
-                        parent_top_comment=comment,
-                        parent_top_comment_object=top_comment,
+                    insert_child_comments(
+                        parent_comment=comment,
+                        parent_comment_object=comment,
                     )
 
-    def insert_child_new_comments(parent_new_comment, parent_new_comment_object):
-        for comment in parent_new_comment["kids"]:
+    for root_comments in comments:
+        for root_comment in root_comments:
             # Have not been able to update comment information (SQLAlchemy's merge function is giving issues)
-            new_comment = NewComment.find_item(comment["id"])
-            if not comment.get("dead", False) and not new_comment:
-                new_comment = NewComment(
-                    id=comment.get("id"),
-                    time=comment.get("time"),
-                    author=comment.get("by"),
-                    text=comment.get("text"),
-                    type="child",
-                    parent_comment=parent_new_comment_object,
-                )
-                db.session.add(new_comment)
-
-                if comment.get("kids"):
-                    insert_child_new_comments(
-                        parent_new_comment=comment,
-                        parent_new_comment_object=new_comment,
-                    )
-
-    for root_top_comments in top_comments:
-        for root_top_comment in root_top_comments:
-            # Have not been able to update comment information (SQLAlchemy's merge function is giving issues)
-            top_comment = TopComment.find_item(root_top_comment["id"])
-            if not root_top_comment.get("dead", False) and not top_comment:
-                top_comment = TopComment(
-                    id=root_top_comment.get("id"),
-                    time=root_top_comment.get("time"),
-                    author=root_top_comment.get("by"),
-                    text=root_top_comment.get("text"),
+            found_comment = Comment.find_item(root_comment["id"])
+            if not root_comment.get("dead", False) and not found_comment:
+                comment = Comment(
+                    id=root_comment.get("id"),
+                    time=root_comment.get("time"),
+                    author=root_comment.get("by"),
+                    text=root_comment.get("text"),
                     type="root",
-                    story=TopStory.find_item(root_top_comment["parent"]),
+                    story=Story.find_item(root_comment["parent"]),
                 )
-                if root_top_comment.get("kids"):
-                    insert_child_top_comments(
-                        parent_top_comment=root_top_comment,
-                        parent_top_comment_object=top_comment,
+                if root_comment.get("kids"):
+                    insert_child_comments(
+                        parent_comment=root_comment,
+                        parent_comment_object=comment,
                     )
-                db.session.add(top_comment)
-
-    for root_new_comments in new_comments:
-        for root_new_comment in root_new_comments:
-            # Have not been able to update comment information (SQLAlchemy's merge function is giving issues)
-            new_comment = NewComment.find_item(root_new_comment["id"])
-            if not root_new_comment.get("dead", False) and not new_comment:
-                new_comment = NewComment(
-                    id=root_new_comment.get("id"),
-                    time=root_new_comment.get("time"),
-                    author=root_new_comment.get("by"),
-                    text=root_new_comment.get("text"),
-                    type="root",
-                    story=NewStory.find_item(root_new_comment["parent"]),
-                )
-                if root_new_comment.get("kids"):
-                    insert_child_new_comments(
-                        parent_new_comment=root_new_comment,
-                        parent_new_comment_object=new_comment,
-                    )
-                db.session.add(new_comment)
-
+                db.session.add(comment)
     db.session.commit()
