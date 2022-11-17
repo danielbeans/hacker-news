@@ -67,6 +67,7 @@ class Story(SearchMixin, db.Model):
     url = db.Column(db.String)
     num_comments = db.Column(db.Integer)
     order_num = db.Column(db.Integer)
+    keywords = db.Column(db.String)
 
     comments = db.relationship(
         "Comment", cascade="all, delete, delete-orphan", backref="story"
@@ -77,7 +78,7 @@ class Story(SearchMixin, db.Model):
 
 
 # For like/dislike functionality
-class StoryAssociation(SearchMixin, db.Model):
+class StoryAssociation(db.Model):
     __tablename__ = "story_association_table"
 
     user_id = db.Column(db.ForeignKey("user.id"), primary_key=True)
@@ -87,6 +88,16 @@ class StoryAssociation(SearchMixin, db.Model):
 
     def __repr__(self):
         return f"<StoryID: {self.user_id}> {self.story_id}"
+
+    @classmethod
+    def find_item_story_id(cls, id):
+        item = db.session.scalars(db.select(cls).filter_by(story_id=id)).one_or_none()
+        return item
+
+    @classmethod
+    def find_item_user_id(cls, id):
+        item = db.session.scalars(db.select(cls).filter_by(user_id=id)).one_or_none()
+        return item
 
 
 class Comment(SearchMixin, db.Model):

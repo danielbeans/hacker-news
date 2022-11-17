@@ -14,7 +14,7 @@ def zip_stories(stories):
     """
     Calculates a story order number, publish time, and like/dislike status and zips them with their story
     Arguments:
-        stories: An list of TopStory or NewStory objects
+        stories: An list of Story objects
     Returns:
         A zip object with tuples (order number, story, publish time)
     """

@@ -29,15 +29,26 @@
     {% endif %}
     {# Dialog box telling users they need an admin role to access functionality #}
     {% if request.args.get("admin_required") and not g.current_user.role == "admin" %}
-    <div id="login_alert" class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
+    <div id="admin_alert" class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
         <strong>Admin access required</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    {# Dialog box saying story does not exist #}
+    {% if request.args.get("no_story") %}
+    <div id="story_alert" class="alert alert-warning alert-dismissible fade show mt-2" role="alert">
+        <strong>Story doesn't exist</strong>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     {% endif %}
     <body>
         <!-- Navigation Bar -->
         {% set active_page = active_page|default('index') %}
+        {% if "admin" == active_page %}
+        <nav id="navigation_bar" class="navbar navbar-expand-lg navbar-dark bg-danger mb-2">
+        {% else %}
         <nav id="navigation_bar" class="navbar navbar-expand-lg navbar-dark bg-primary mb-2">
+        {%endif%}
             <div class="container-fluid m-1">
                 <div class="navbar-nav">
                     <div class="d-flex align-items-center">

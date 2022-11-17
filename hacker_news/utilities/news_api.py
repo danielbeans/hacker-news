@@ -8,12 +8,13 @@ from ..db import (
     WebsiteSetting,
 )
 import click
-from flask.cli import with_appcontext
+from flask.cli import with_appcontext, current_app
 from time import time
 from os.path import exists
 import asyncio
 import aiohttp
 from flask_login import current_user
+from keybert import KeyBERT
 
 MAX_STORY_COUNT = 30
 # Enables or disables API query and database insertion of duplicate items in database
@@ -87,12 +88,49 @@ def query_comments(story_id):
     return comments
 
 
-def query_liked_stories(story_id):
-    liked_stories = db.session.scalars(
-        db.select(Comment).filter_by(story_id=story_id)
-    ).all()
-
+def query_liked_stories():
+    liked_stories = query_story_association_all(type="like")
+    liked_stories = [query_story(story.story_id) for story in liked_stories]
     return liked_stories
+
+
+def query_disliked_stories():
+    disliked_stories = query_story_association_all(type="dislike")
+    disliked_stories = [query_story(story.story_id) for story in disliked_stories]
+    return disliked_stories
+
+
+def query_story_association_all(type):
+    story_associations = db.session.scalars(
+        db.select(StoryAssociation).filter_by(type=type)
+    ).all()
+    return story_associations
+
+
+def query_story_association_by_id(story_id=None, user_id=None):
+    if story_id:
+        story_association = db.session.scalars(
+            db.select(StoryAssociation).filter_by(story_id=story_id)
+        ).all()
+    elif user_id:
+        story_association = db.session.scalars(
+            db.select(StoryAssociation).filter_by(user_id=user_id)
+        ).all()
+    else:
+        story_association = None
+    return story_association
+
+
+def edit_story():
+    pass
+
+
+def delete_story(id):
+    # If a user has liked/disliked story
+    if found_story_assoc := StoryAssociation.find_item_story_id(id):
+        db.session.delete(found_story_assoc)
+    db.session.delete(query_story(id))
+    db.session.commit()
 
 
 #####################################################
@@ -179,10 +217,12 @@ async def async_fetch_item(client_session, item_id):
 def insert_stories_db(stories):
     # Guarantees order of stories is correct
     num_story_rows = db.session.query(Story).count()
-
+    kw_model = KeyBERT()
     for num, story in enumerate(stories[::-1]):
         found_story = Story.find_item(story["id"])
         if (found_story and UPDATE_DB) or not found_story:
+            keywords_list = kw_model.extract_keywords(story.get("title", ""))
+            keywords = " ".join([keyword[0] for keyword in keywords_list])
             found_story = db.session.merge(
                 Story(
                     id=story.get("id"),
@@ -193,6 +233,7 @@ def insert_stories_db(stories):
                     url=story.get("url", ""),
                     order_num=num + num_story_rows,
                     num_comments=story.get("descendants", 0),
+                    keywords=keywords,
                 )
             )
             db.session.add(found_story)

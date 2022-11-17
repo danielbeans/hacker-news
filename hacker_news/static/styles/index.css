@@ -56,6 +56,20 @@ body {
     z-index: 10;
 }
 
+#admin_alert {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+#story_alert {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
 .bi-caret-up {
     color: green;
     scale: 1.3;
@@ -102,4 +116,8 @@ body {
 
 .bi-caret-down-fill:hover {
     top: 2px;
+}
+
+#admin_liked_stories {
+    max-height: 200px;
 }

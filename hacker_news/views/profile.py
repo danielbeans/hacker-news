@@ -15,4 +15,4 @@ def set_current_user(endpoint, values):
 def index(username):
     if username.lower() != g.current_user.nickname.lower():
         return redirect(url_for("home.index"))
-    return render_template("profile.html", profile=username)
+    return render_template("profile.html")

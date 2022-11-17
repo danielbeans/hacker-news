@@ -1,12 +1,105 @@
 {% extends 'base.html' %}
 {% set active_page = "admin" %}
 {% block body %}
-<h1 class="text-center pt-5 pb-2">
+<h1 class="text-center pt-5 pb-4">
     <strong>
     {% block title%}Admin{% endblock %}
     </strong>
 </h1>
-<div class="bg-secondary rounded p-4" style="--bs-bg-opacity: .1;">
-<h3>Liked Stories</h3>
+<div class="d-flex">
+    <div class="m-3 flex-grow-1">
+        <div class="shadow rounded p-4 mb-5">
+            <h3 class="text-success pb-2">Liked Stories</h3>
+            <div id="admin_liked_stories" class="overflow-auto">
+                <table class="table">
+                    {% for story, users in liked_stories %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center flex-row">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">
+                                        &#60;ID: {{ story.id }}&#62;
+                                        <a
+                                            class="link-unstyled"
+                                            href="{{ story.url }}"
+                                            >{{ story.title }}</a
+                                        >
+                                    </div>
+                                    <small class="text-secondary">
+                                        Liked by:
+                                        <em>
+                                        {% for user in users %}
+                                            {{ user.nickname }},
+                                        {% endfor %}
+                                        </em>
+                                    </small>
+                                    <br>
+                                    <small class="text-secondary">
+                                        Keywords:
+                                        <em>
+                                        {% for keyword in story.keywords.split(" ") %}
+                                            {{ keyword }},
+                                        {% endfor %}
+                                        </em>
+                                    </small>
+                                </div>
+                                <div class="d-flex flex-row">
+                                    <button type="button" class="btn btn-outline-warning btn-sm px-3 mx-2">Edit</button>
+                                    <a type="button" href="{{ url_for('story.index', id=story.id) }}" class="btn btn-outline-success btn-sm px-3">View</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="shadow rounded p-4 mb-5">
+            <h3 class="text-danger pb-2">Disliked Stories</h3>
+            <div id="admin_liked_stories" class="overflow-auto">
+                <table class="table">
+                    {% for story, users in disliked_stories %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center flex-row">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">
+                                        &#60;ID: {{ story.id }}&#62;
+                                        <a
+                                            class="link-unstyled"
+                                            href="{{ story.url }}"
+                                            >{{ story.title }}</a
+                                        >
+                                    </div>
+                                    <small class="text-secondary">
+                                        Disliked by:
+                                        <em>
+                                        {% for user in users %}
+                                            {{ user.nickname }},
+                                        {% endfor %}
+                                        </em>
+                                    </small>
+                                </div>
+                                <div class="d-flex flex-row">
+                                    <button type="button" class="btn btn-outline-warning btn-sm px-3 mx-2">Edit</button>
+                                    <a type="button" href="{{ url_for('story.index', id=story.id) }}" class="btn btn-outline-success btn-sm px-3">View</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="m-3">
+        <div class="shadow rounded p-4 mb-5">
+            <h3 class="text-primary pb-2 mx-5">Other Settings</h3>
+            <div class="form-check form-switch">
+                <input class="form-check-input me-4" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Toggle comments sync</label>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock body %}

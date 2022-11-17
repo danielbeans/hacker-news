@@ -64,9 +64,12 @@ def session_login(token):
             email=user_info["email"],
             name=user_info["name"],
             nickname=user_nickname,
-            role="member",
         )
-        db.session.add(user)
+
+    # Assign proper role based on config file
+    user = db.session.merge(User(id=user.id, role=check_member_role(user.email)))
+
+    db.session.add(user)
     db.session.commit()
 
     session["is_authenticated"] = True
@@ -100,3 +103,9 @@ def admin_required(func):
         return func(*args, **kwargs)
 
     return decorated_view
+
+
+def check_member_role(email):
+    if email in current_app.config.get("ADMIN_LIST"):
+        return "admin"
+    return "member"

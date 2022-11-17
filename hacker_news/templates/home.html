@@ -186,7 +186,7 @@
 
         fetch(url).then((res) => {
             if (get_login_required(res)) {
-                window.location.href(res.url);
+                window.location.replace(res.url);
             }
         });
     }

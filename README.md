@@ -2,9 +2,59 @@
 
 ## Installation and Setup
 
-### Production
+### Setup
+
+To setup this project we require a [Auth0](https://auth0.com) application account.
+
+1. Obtain Auth0 credentials and place them in an `.env` file in the root of the project along with a long random string for the Secret Key.
+
+    ```py
+    # .env
+
+    AUTH0_CLIENT_ID=
+    AUTH0_CLIENT_SECRET=
+    AUTH0_DOMAIN=something.us.auth0.com
+    APP_SECRET_KEY=abcdefghijklmnopqrstuvwxyz
+    ```
+
+2. Create a `config.json` and assign the folder the database will be created in.
+
+    ```py
+    # .config.json
+
+    {
+    "DEBUG": true,
+    "ADMIN_LIST": ["example@abcd.com", ], # Emails the server will make admin on login/signup
+    "SQLALCHEMY_DATABASE_URI": "sqlite:///path/to/database.db"
+    }
+    ```
+
+3. Create a Python virtual environment and activate it.
+
+    ```bash
+    python -m venv env
+    . env/bin/activate
+    ```
+
+4. Install required packages from requirements.txt
+
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ### Development
+
+To run this project we use the [Flask development server](https://flask.palletsprojects.com/en/2.2.x/server).
+
+Assuming you have [setup](#setup) the project, run the development server
+
+```bash
+flask --debug run
+```
+
+### Production
+
+To run this project in a production setting, we use [Gunicorn](https://gunicorn.org).
 
 ## Mid-semeseter Project Evaluation
 
