@@ -44,7 +44,7 @@
                                     </small>
                                 </div>
                                 <div class="d-flex flex-row">
-                                    <button type="button" class="btn btn-outline-warning btn-sm px-3 mx-2">Edit</button>
+                                    <a type="button" href="{{ url_for('story.edit', id=story.id) }}" class="btn btn-outline-warning btn-sm px-3 me-2">Edit</a>
                                     <a type="button" href="{{ url_for('story.index', id=story.id) }}" class="btn btn-outline-success btn-sm px-3">View</a>
                                 </div>
                             </div>
@@ -79,9 +79,18 @@
                                         {% endfor %}
                                         </em>
                                     </small>
+                                    <br>
+                                    <small class="text-secondary">
+                                        Keywords:
+                                        <em>
+                                        {% for keyword in story.keywords.split(" ") %}
+                                            {{ keyword }},
+                                        {% endfor %}
+                                        </em>
+                                    </small>
                                 </div>
                                 <div class="d-flex flex-row">
-                                    <button type="button" class="btn btn-outline-warning btn-sm px-3 mx-2">Edit</button>
+                                    <a type="button" href="{{ url_for('story.edit', id=story.id) }}" class="btn btn-outline-warning btn-sm px-3 me-2">Edit</a>
                                     <a type="button" href="{{ url_for('story.index', id=story.id) }}" class="btn btn-outline-success btn-sm px-3">View</a>
                                 </div>
                             </div>
@@ -95,9 +104,32 @@
     <div class="m-3">
         <div class="shadow rounded p-4 mb-5">
             <h3 class="text-primary pb-2 mx-5">Other Settings</h3>
-            <div class="form-check form-switch">
-                <input class="form-check-input me-4" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+            <div class="form-check form-switch mb-4">
+                <input disabled class="form-check-input me-4" type="checkbox" role="switch" id="flexSwitchCheckDefault">
                 <label class="form-check-label" for="flexSwitchCheckDefault">Toggle comments sync</label>
+            </div>
+            <div class="d-flex flex-column align-items-center">
+                <div>
+                    <a
+                        class="btn btn-primary me-auto"
+                        onclick="update_comments()"
+                        role="button"
+                        style="text-decoration: none"
+                    >
+                    Refresh Comments&nbsp;
+                    <div
+                        class="spinner-border spinner-border-sm text-white"
+                        role="status"
+                        id="refresh_icon"
+                        style="display: none"
+                    ></div>
+                    </a>
+                </div>
+                <div id="update_comments_time_block" class="text-secondary" style="display: none">
+                    <span>Updated in</span>
+                    <span id="update_comments_time"></span>
+                    <span>seconds</span>
+                </div>
             </div>
         </div>
     </div>

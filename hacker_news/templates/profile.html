@@ -2,9 +2,7 @@
 {% block title%}{{ g.current_user.nickname }}{% endblock %}
 {% block body %}
 <h1 class="text-center pt-5 pb-4">
-    <strong>
-    Profile
-    </strong>
+    <strong>Profile</strong>
 </h1>
 <div class="shadow rounded p-4 mb-5">
     <p class="text-secondary mb-0">Name:</p>
@@ -15,5 +13,77 @@
     <h2 class="pb-2">{{g.current_user.email}}</h2>
     <p class="text-secondary mb-0">Role:</p>
     <h2 class="pb-2">{{g.current_user.role}}</h2>
+</div>
+<div class="shadow rounded p-4 mb-5">
+    <h3 class="text-success pb-2">Liked Stories</h3>
+    <div id="admin_liked_stories" class="overflow-auto">
+        <table class="table">
+            {% for story in liked_stories %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center flex-row">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">
+                                &#60;ID: {{ story.id }}&#62;
+                                <a
+                                    class="link-unstyled"
+                                    href="{{ story.url }}"
+                                    >{{ story.title }}</a
+                                >
+                            </div>
+                            <small class="text-secondary">
+                                Keywords:
+                                <em>
+                                {% for keyword in story.keywords.split(" ") %}
+                                    {{ keyword }},
+                                {% endfor %}
+                                </em>
+                            </small>
+                        </div>
+                        <div class="d-flex flex-row">
+                            <a type="button" href="{{ url_for('story.index', id=story.id) }}" class="btn btn-outline-success btn-sm px-3">View</a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+<div class="shadow rounded p-4 mb-5">
+    <h3 class="text-danger pb-2">Disliked Stories</h3>
+    <div id="admin_liked_stories" class="overflow-auto">
+        <table class="table">
+            {% for story in disliked_stories %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center flex-row">
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">
+                                &#60;ID: {{ story.id }}&#62;
+                                <a
+                                    class="link-unstyled"
+                                    href="{{ story.url }}"
+                                    >{{ story.title }}</a
+                                >
+                            </div>
+                            <small class="text-secondary">
+                                Keywords:
+                                <em>
+                                {% for keyword in story.keywords.split(" ") %}
+                                    {{ keyword }},
+                                {% endfor %}
+                                </em>
+                            </small>
+                        </div>
+                        <div class="d-flex flex-row">
+                            <a type="button" href="{{ url_for('story.index', id=story.id) }}" class="btn btn-outline-success btn-sm px-3">View</a>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </div>
 {% endblock body %}

@@ -65,6 +65,7 @@ def session_login(token):
             name=user_info["name"],
             nickname=user_nickname,
         )
+        db.session.add(user)
 
     # Assign proper role based on config file
     user = db.session.merge(User(id=user.id, role=check_member_role(user.email)))

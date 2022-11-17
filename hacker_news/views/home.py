@@ -2,14 +2,14 @@ from flask import Blueprint, render_template, redirect, url_for, session, g, req
 import os
 from urllib.parse import quote_plus, urlencode
 from flask_login import logout_user, current_user, login_required
-from ..utilities import query_top_stories, update_data, oauth
+from ..utilities import query_top_stories, update_data, oauth, admin_required
 from time import time
 from datetime import timedelta
 import asyncio
 
 home = Blueprint("home", __name__)
 
-
+# * Similar functionality in admin.py, profile.py
 def zip_stories(stories):
     """
     Calculates a story order number, publish time, and like/dislike status and zips them with their story
@@ -64,6 +64,15 @@ def index():
 def update():
     asyncio.run(update_data())
     return redirect(url_for(endpoint="home.index"))
+
+
+@home.route("/update/comments")
+@admin_required
+@login_required
+def update_comments():
+    start = time()
+    asyncio.run(update_data(comments=True))
+    return {"time_taken": f"{round(time() - start, 3)}"}
 
 
 @home.route("/logout")

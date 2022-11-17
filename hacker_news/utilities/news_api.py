@@ -19,6 +19,7 @@ from keybert import KeyBERT
 MAX_STORY_COUNT = 30
 # Enables or disables API query and database insertion of duplicate items in database
 UPDATE_DB = False
+UPDATE_COMMENTS = False
 IDS_QUERIED = 0
 
 # Populates database with story and comment data, used in 'create-data' flask command
@@ -28,18 +29,20 @@ async def create_data():
     insert_stories_db(stories=stories)
 
     # Insert Comments into database
-    if toggle := WebsiteSetting.find_item("toggle_comments"):
-        if toggle.status == "true":
-            comments = [
-                await get_comments(story) for story in stories
-            ]  # List of lists of dicts
-            insert_comments_db(comments=comments)
+    # toggle = WebsiteSetting.find_item("toggle_comments")
+    if UPDATE_COMMENTS:
+        comments = [
+            await get_comments(story) for story in stories
+        ]  # List of lists of dicts
+        insert_comments_db(comments=comments)
 
 
 # Updates database story data, used in 'get_new_api_data' APScheduler task
-async def update_data():
-    global UPDATE_DB
+async def update_data(comments=False):
+    global UPDATE_DB, UPDATE_COMMENTS
     UPDATE_DB = True
+    if comments:
+        UPDATE_COMMENTS = True
     await create_data()
 
 
@@ -121,8 +124,13 @@ def query_story_association_by_id(story_id=None, user_id=None):
     return story_association
 
 
-def edit_story():
-    pass
+def edit_story(id, **kwargs):
+    story = query_story(id)
+    story = db.session.merge(
+        Story(id=id, keywords=kwargs.get("keywords", story.keywords))
+    )
+    db.session.add(story)
+    db.session.commit()
 
 
 def delete_story(id):
@@ -220,23 +228,29 @@ def insert_stories_db(stories):
     kw_model = KeyBERT()
     for num, story in enumerate(stories[::-1]):
         found_story = Story.find_item(story["id"])
-        if (found_story and UPDATE_DB) or not found_story:
+        if not found_story:
             keywords_list = kw_model.extract_keywords(story.get("title", ""))
             keywords = " ".join([keyword[0] for keyword in keywords_list])
+            found_story = Story(
+                id=story.get("id"),
+                title=story.get("title"),
+                score=story.get("score"),
+                time=story.get("time"),
+                author=story.get("by"),
+                url=story.get("url", ""),
+                order_num=num + num_story_rows,
+                num_comments=story.get("descendants", 0),
+                keywords=keywords,
+            )
+        elif found_story and UPDATE_DB:
             found_story = db.session.merge(
                 Story(
                     id=story.get("id"),
-                    title=story.get("title"),
                     score=story.get("score"),
-                    time=story.get("time"),
-                    author=story.get("by"),
-                    url=story.get("url", ""),
-                    order_num=num + num_story_rows,
                     num_comments=story.get("descendants", 0),
-                    keywords=keywords,
                 )
             )
-            db.session.add(found_story)
+        db.session.add(found_story)
     db.session.commit()
 
 
@@ -246,7 +260,7 @@ def insert_comments_db(comments):
             # Have not been able to update comment information (SQLAlchemy's merge function is giving issues)
             found_comment = Comment.find_item(comment["id"])
             if not comment.get("dead", False) and not found_comment:
-                comment = Comment(
+                comment_object = Comment(
                     id=comment.get("id"),
                     time=comment.get("time"),
                     author=comment.get("by"),
@@ -254,12 +268,12 @@ def insert_comments_db(comments):
                     type="child",
                     parent_comment=parent_comment_object,
                 )
-                db.session.add(comment)
+                db.session.add(comment_object)
 
                 if comment.get("kids"):
                     insert_child_comments(
                         parent_comment=comment,
-                        parent_comment_object=comment,
+                        parent_comment_object=comment_object,
                     )
 
     for root_comments in comments:
@@ -267,7 +281,7 @@ def insert_comments_db(comments):
             # Have not been able to update comment information (SQLAlchemy's merge function is giving issues)
             found_comment = Comment.find_item(root_comment["id"])
             if not root_comment.get("dead", False) and not found_comment:
-                comment = Comment(
+                comment_object = Comment(
                     id=root_comment.get("id"),
                     time=root_comment.get("time"),
                     author=root_comment.get("by"),
@@ -278,7 +292,7 @@ def insert_comments_db(comments):
                 if root_comment.get("kids"):
                     insert_child_comments(
                         parent_comment=root_comment,
-                        parent_comment_object=comment,
+                        parent_comment_object=comment_object,
                     )
-                db.session.add(comment)
+                db.session.add(comment_object)
     db.session.commit()

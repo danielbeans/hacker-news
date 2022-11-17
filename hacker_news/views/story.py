@@ -43,17 +43,25 @@ def story_exists(func):
 @story.url_value_preprocessor
 def set_current_user(endpoint, values):
     g.current_user = current_user
+    if story := query_story(values.get("id", "")):
+        g.story = query_story(story.id)
+        g.comments = query_comments(story.id)
+        g.publish_time = calculate_publish_time(story.time)
+        g.like_statuses = None
+        if current_user.is_authenticated:
+            liked_story = current_user.has_liked_story(story.id)
+            if liked_story:
+                g.like_status = liked_story.type
+            else:
+                g.like_statuses = None
+        else:
+            g.like_statuses = None
 
 
 @story.route("/")
 @story_exists
 def index(id):
-    story = query_story(id)
-    comments = query_comments(id)
-    publish_time = calculate_publish_time(story.time)
-    return render_template(
-        "story.html", story=story, comments=comments, publish_time=publish_time
-    )
+    return render_template("story.html")
 
 
 @story.route("/<type>/<action>")
@@ -73,8 +81,22 @@ def like(id, type, action):
 
 @story.route("/edit")
 @story_exists
+@login_required
+@admin_required
 def edit(id):
-    return render_template("home.html")
+    return render_template("edit-story.html")
+
+
+@story.route("/update", methods=["POST", "GET"])
+@story_exists
+@login_required
+@admin_required
+def update(id):
+    if request.method == "POST":
+        keywords = request.form.get("keywords")
+        edit_story(id, keywords=keywords)
+
+    return redirect(url_for("story.edit", id=id))
 
 
 @story.route("/delete")

@@ -10,12 +10,13 @@ from ..utilities import (
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
 
-
+# * Similar functionality in profile.py, home.py
 def zip_stories(stories, type):
     """
-    Removes duplicate stories, alculates which users liked a story and zips them with their story
+    Removes duplicate stories, calculates which users liked/disliked a story and zips them with their story
     Arguments:
         stories: An list of Story objects
+        type: Type of StoryAssociation to search for
     Returns:
         A zip object with tuples (story, [list of users])
     """

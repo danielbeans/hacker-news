@@ -1,39 +1,80 @@
 {% extends 'base.html' %}
-{% block title%} {{ story.title }} {% endblock %}
+{% block title%} {{ g.story.title }} {% endblock %}
 {%block body %}
 <table class="table table-striped">
     <tr>
         <td>
             <div class="d-flex flex-row px-2">
+                <div class="d-flex flex-column px-2">
+                    {% if g.like_status == "like" %}
+                        <i id="like" class="liked bi bi-caret-up-fill"
+                            onmouseover="hover_like(this)"
+                            onmouseout="unhover_like(this)"
+                            onclick="toggle_like(this, {{ g.story.id }})"
+                        ></i>
+                        <i id="dislike" class="bi bi-caret-down"
+                            onmouseover="hover_dislike(this)"
+                            onmouseout="unhover_dislike(this)"
+                            onclick="toggle_dislike(this, {{ g.story.id }})"
+                        ></i>
+                    {% elif g.like_status == "dislike" %}
+                        <i id="like" class="bi bi-caret-up"
+                            onmouseover="hover_like(this)"
+                            onmouseout="unhover_like(this)"
+                            onclick="toggle_like(this, {{ g.story.id }})"
+                        ></i>
+                        <i id="dislike" class="disliked bi bi-caret-down-fill"
+                            onmouseover="hover_dislike(this)"
+                            onmouseout="unhover_dislike(this)"
+                            onclick="toggle_dislike(this, {{ g.story.id }})"
+                        ></i>
+                    {% else %}
+                        <i id="like" class="bi bi-caret-up"
+                            onmouseover="hover_like(this)"
+                            onmouseout="unhover_like(this)"
+                            onclick="toggle_like(this, {{ g.story.id }})"
+                        ></i>
+                        <i id="dislike" class="bi bi-caret-down"
+                            onmouseover="hover_dislike(this)"
+                            onmouseout="unhover_dislike(this)"
+                            onclick="toggle_dislike(this, {{ g.story.id }})"
+                        ></i>
+                    {% endif %}
+                    </div>
                 <div class="flex-grow-1">
                     <div>
-                        <a class="fw-bold link-unstyled" href="{{ story.url }}">{{ story.title }} </a>
+                        <a class="fw-bold link-unstyled" href="{{ g.story.url }}">{{ g.story.title }} </a>
                     </div>
                     <small>
-                        {{ story.score }} points by {{ story.author }}
-                        {% if publish_time > 60 %} {{ publish_time // 60}} hours ago |
-                        {% else %} {{ publish_time }} minutes ago |
+                        {{ g.story.score }} points by {{ g.story.author }}
+                        {% if g.publish_time > 60 %} {{ g.publish_time // 60}} hours ago |
+                        {% else %} {{ g.publish_time }} minutes ago |
                         {% endif %}
                         <a
                             class="link-unstyled"
-                            href="{{ url_for('story.index', id=story.id) }}"
-                            >{{ story.num_comments }} comments
+                            href="{{ url_for('story.index', id=g.story.id) }}"
+                            >{{ g.story.num_comments }} comments
                         </a>
                     </small>
                 </div>
-                <div class="d-flex flex-row align-items-center">
+                <div class="d-flex flex-row align-items-center me-3">
                     <strong class="me-2">Keywords:</strong>
-                    {% for keyword in story.keywords.split(" ") %}
+                    {% for keyword in g.story.keywords.split(" ") %}
                         {{ keyword }},
                     {% endfor %}
                 </div>
+                {% if session['is_authenticated'] and g.current_user.role == "admin" %}
+                <div class="d-flex flex-row align-items-center">
+                    <a type="button" href="{{ url_for('story.edit', id=g.story.id) }}" class="btn btn-warning btn-sm px-3">Edit</a>
+                </div>
+                {% endif %}
             </div>
         </td>
     </tr>
 </table>
 <h3 class="ms-2"><strong>Comments</strong></h3>
 <ul class="list-group comments">
-    {% for comment in comments recursive%}
+    {% for comment in g.comments recursive%}
         <li>
             <div class="mb-3 border-top">
                 <div>
