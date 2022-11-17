@@ -16,7 +16,7 @@ import aiohttp
 from flask_login import current_user
 from keybert import KeyBERT
 
-MAX_STORY_COUNT = 30
+MAX_STORY_COUNT = 15 # Because of limited production resources
 # Enables or disables API query and database insertion of duplicate items in database
 UPDATE_DB = False
 UPDATE_COMMENTS = False

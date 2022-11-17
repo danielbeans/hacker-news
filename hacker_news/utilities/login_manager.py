@@ -107,6 +107,7 @@ def admin_required(func):
 
 
 def check_member_role(email):
-    if email in current_app.config.get("ADMIN_LIST"):
-        return "admin"
+    if admin_list := current_app.config.get("ADMIN_LIST"):
+        if email in admin_list:
+            return "admin"
     return "member"
