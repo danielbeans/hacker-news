@@ -160,6 +160,7 @@ def check_member_role(email):
     Returns:
         A string of what role the email is assigned
     """
-    if email in current_app.config.get("ADMIN_LIST"):
-        return "admin"
+    if admin_list := current_app.config.get("ADMIN_LIST"):
+        if email in admin_list:
+            return "admin"
     return "member"
