@@ -412,6 +412,7 @@ def insert_stories_db(stories):
                 Story(
                     id=story.get("id"),
                     score=story.get("score"),
+                    order_num=num + num_story_rows,
                     num_comments=story.get("descendants", 0),
                 )
             )
