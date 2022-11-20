@@ -1,4 +1,16 @@
-from flask import Blueprint, render_template, redirect, request, url_for, g
+"""
+Defines the routes for the profile page
+
+Methods:
+    zip_stories(stories, type)
+    set_current_user(endpoint, values)
+    index()
+
+Variables:
+    profile
+"""
+
+from flask import Blueprint, render_template, redirect, url_for, g
 from flask_login import login_required, current_user
 from ..utilities import (
     query_story_association_by_id,
@@ -7,16 +19,18 @@ from ..utilities import (
 )
 
 
-profile = Blueprint("profile", __name__, url_prefix=f"/profile/<username>")
+profile = Blueprint("profile", __name__, url_prefix="/profile/<username>")
 
 
 # * Similar functionality in admin.py, home.py
 def zip_stories(stories, type):
     """
     Removes duplicate stories, calculates which stories the user liked/disliked
+
     Arguments:
-        stories: An list of Story objects
-        type: Type of StoryAssociation to search for
+        stories (list): An list of Story objects
+        type (string): Type of StoryAssociation to search for
+
     Returns:
         A list of stories
     """
@@ -33,12 +47,28 @@ def zip_stories(stories, type):
 
 @profile.url_value_preprocessor
 def set_current_user(endpoint, values):
+    """
+    Sets variables before route is called
+
+    Parameters:
+        endpoint: Endpoint
+        values (dict): All the values route is called with
+    """
     g.current_user = current_user
 
 
 @profile.route("/")
 @login_required
 def index(username):
+    """
+    Index route for viewing the profile page
+
+    Parameters:
+        username (string): Username of User currently logged in
+
+    Returns:
+        Renders profile.html
+    """
     if username.lower() != g.current_user.nickname.lower():
         return redirect(url_for("home.index"))
 

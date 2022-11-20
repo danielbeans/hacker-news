@@ -1,15 +1,29 @@
-from flask import Flask
+"""
+Create Flask application to be used on development or production WSGI servers.
+Initializes config, login manager, OAuth, the database, registers commands,
+and blueprints.
 
-from .db import db
-from . import views
-from .utilities import login_manager, add_create_data_command, oauth, init_oauth
-from dotenv import load_dotenv
+Methods:
+    create_app() -> Flask object
+"""
+
 import os
-from .tasks import scheduler
 import json
+from flask import Flask
+from dotenv import load_dotenv
+from .db import db
+from .tasks import scheduler
+from .utilities import login_manager, add_create_data_command, oauth, init_oauth
+from . import views
 
 
 def create_app():
+    """
+    Creates Flask application and initializes libraries.
+
+    Returns:
+        app: Flask object
+    """
     # Load .env when in production (Flask CLI tool isn't used)
     load_dotenv()
 

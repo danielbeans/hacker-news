@@ -1,22 +1,44 @@
-from flask_login import LoginManager, login_user, current_user
-from flask import redirect, url_for, request, session, current_app
-from uuid import uuid4
-from ..db import db, User
-from authlib.integrations.flask_client import OAuth
+"""
+Utilities for managing User login and sessions
+
+Methods:
+    init_oauth(oauth):
+    load_user(id):
+    unauthorized():
+    session_login(token):
+    admin_required(func):
+    check_member_role(email):
+
+Variables:
+    login_manager
+    oauth
+"""
+
 import os
-from urllib.parse import urlparse
 from functools import wraps
+from urllib.parse import urlparse
+from uuid import uuid4
+from authlib.integrations.flask_client import OAuth
+from flask import redirect, url_for, request, session, current_app
+from flask_login import LoginManager, login_user, current_user
+from ..db import db, User
 
 login_manager = LoginManager()
 oauth = OAuth()
 
 
-def init_oauth(oauth):
+def init_oauth(oauth_handler):
+    """
+    Initialize OAuth object with variables from .env
+
+    Parameters:
+        oauth (OAuth): OAuth object to initialize
+    """
     auth0_client_id = os.getenv("AUTH0_CLIENT_ID")
     auth0_client_secret = os.getenv("AUTH0_CLIENT_SECRET")
     auth0_domain = os.getenv("AUTH0_DOMAIN")
 
-    oauth.register(
+    oauth_handler.register(
         "auth0",
         client_id=auth0_client_id,
         client_secret=auth0_client_secret,
@@ -27,14 +49,28 @@ def init_oauth(oauth):
     )
 
 
-# Callback route to reload user from userID in session
 @login_manager.user_loader
-def load_user(id):
-    return User.find_item(id)
+def load_user(user_id):
+    """
+    Callback route to reload user from userID in session. Used by Flask_login
+
+    Parameters:
+        id (string): User ID
+
+    Returns:
+        user (User): A User object
+    """
+    return User.find_item(user_id)
 
 
 @login_manager.unauthorized_handler
 def unauthorized():
+    """
+    Route called when a User isn't logged in
+
+    Returns:
+        response (Response): A redirect Response object
+    """
     url_redirect = None
     if request.referrer:
         url_redirect = request.referrer
@@ -45,8 +81,16 @@ def unauthorized():
     return redirect(url_redirect or url_for("home.index", login_required="true"))
 
 
-# Logic to login user with query to database
 def session_login(token):
+    """
+    Logic to login user with query to database
+
+    Parameters:
+        token (Object): An object holding User information and tokens
+
+    Returns:
+        login_user (bool): Whether or not a user is successfully logged in
+    """
     user_info = token["userinfo"]
 
     user = db.session.scalars(
@@ -81,8 +125,8 @@ def admin_required(func):
     """
     Decorate a view to ensure the current user has an admin role
 
-    :param func: The view function to decorate.
-    :type func: function
+    Parameters:
+        func (function): The view function to decorate
     """
 
     @wraps(func)
@@ -107,6 +151,15 @@ def admin_required(func):
 
 
 def check_member_role(email):
+    """
+    Check config.json to see whhich User has the admin role
+
+    Parameters:
+        email (string): User email to check against config.json
+
+    Returns:
+        A string of what role the email is assigned
+    """
     if email in current_app.config.get("ADMIN_LIST"):
         return "admin"
     return "member"

@@ -1,5 +1,55 @@
 # Hacker News Project
 
+## Description
+
+Hacker News Project is a Flask application that displays the top 20 stories from the [Hacker News API](https://hackernews.api-docs.io/v0/overview) along with details and comments for each story. Users can signup or login using their email or Google OAuth, and then can like/dislike stories, view their profile information, and view their liked/disliked stories. If the User has an admin role, the User can visit an admin panel where the Admin can view every liked/disliked story, edit every story’s keywords, delete a story, and refresh the top 20 stories’ comments.
+
+### File Structure
+
+```sh
+.
+├── README.md
+├── app.py                      # Entry point for the application
+├── configs                     # Config files for VM
+│   ├── gunicorn.config
+│   ├── nginx.config
+│   └── ssh.config
+├── hacker_news
+│   ├── __init__.py
+│   ├── db
+│   │   ├── __init__.py
+│   │   ├── db.py               # Creates database object
+│   │   └── models.py           # Defines all of the database tables and models
+│   ├── static
+│   │   ├── js
+│   │   │   ├── bootstrap.min.js
+│   │   │   └── utilities.js    # All javascript for the templates
+│   │   └── styles
+│   │       ├── bootstrap.min.css
+│   │       └── index.css       # Custom CSS for application templates
+│   ├── tasks
+│   │   └── __init__.py         # Runs a task that updates story data at intervals
+│   ├── templates               # All the HTML that Flask serves
+│   │   ├── admin.html
+│   │   ├── base.html
+│   │   ├── edit-story.html
+│   │   ├── home.html
+│   │   ├── profile.html
+│   │   └── story.html
+│   ├── utilities
+│   │   ├── __init__.py
+│   │   ├── login_manager.py    # Utilities for handling login and sessions
+│   │   └── news_api.py         # Utilities for querying Hacker News API and database
+│   └── views                   # Routes for each section of the website
+│       ├── __init__.py
+│       ├── admin.py
+│       ├── home.py
+│       ├── login.py
+│       ├── profile.py
+│       └── story.py
+└── requirements.txt            # List of pip packages this application requires
+```
+
 ## Installation and Setup
 
 ### Setup

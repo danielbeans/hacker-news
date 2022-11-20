@@ -1,5 +1,24 @@
+"""
+Defines the routes for the profile page
+
+Methods:
+    story_exists(func)
+    set_current_user(endpoint, values)
+    index()
+    like()
+    edit()
+    update()
+    delete()
+
+Variables:
+    story
+"""
+
+from urllib.parse import urlparse
+from functools import wraps
 from flask import Blueprint, render_template, g, redirect, url_for, request
 from flask_login import current_user, login_required
+from .home import calculate_publish_time
 from ..utilities import (
     query_story,
     query_comments,
@@ -7,9 +26,6 @@ from ..utilities import (
     edit_story,
     delete_story,
 )
-from .home import calculate_publish_time
-from functools import wraps
-from urllib.parse import urlparse
 
 story = Blueprint("story", __name__, url_prefix="/story/<id>")
 
@@ -18,8 +34,8 @@ def story_exists(func):
     """
     Decorate a view to ensure the story exists
 
-    :param func: The view function to decorate.
-    :type func: function
+    Parameters:
+        func (function): The view function to decorate
     """
 
     @wraps(func)
@@ -42,6 +58,13 @@ def story_exists(func):
 
 @story.url_value_preprocessor
 def set_current_user(endpoint, values):
+    """
+    Sets variables before route is called
+
+    Parameters:
+        endpoint: Endpoint
+        values (dict): All the values route is called with
+    """
     g.current_user = current_user
     if story := query_story(values.get("id", "")):
         g.story = query_story(story.id)
@@ -61,6 +84,15 @@ def set_current_user(endpoint, values):
 @story.route("/")
 @story_exists
 def index(id):
+    """
+    Index route for viewing the story page
+
+    Parameters:
+        id (string): Story ID
+
+    Returns:
+        Renders story.html
+    """
     return render_template("story.html")
 
 
@@ -68,6 +100,17 @@ def index(id):
 @story_exists
 @login_required
 def like(id, type, action):
+    """
+    Route for liking/disliking stories
+
+    Parameters:
+        id (string): Story ID of story to update
+        type (string): Like or dislike
+        action (string): Add or remove a like or dislike
+
+    Returns:
+        A JSON describing the type and action just queried
+    """
     action = action.lower()
     type = type.lower()
 
@@ -84,6 +127,15 @@ def like(id, type, action):
 @login_required
 @admin_required
 def edit(id):
+    """
+    Route for editing a story
+
+    Parameters:
+        id (string): Story ID
+
+    Returns:
+        Renders edit-story.html
+    """
     return render_template("edit-story.html")
 
 
@@ -92,6 +144,15 @@ def edit(id):
 @login_required
 @admin_required
 def update(id):
+    """
+    Route for updating a story's information using form data
+
+    Parameters:
+        id (string): Story ID for story to update
+
+    Returns:
+        Redirects to story edit route
+    """
     if request.method == "POST":
         keywords = request.form.get("keywords")
         edit_story(id, keywords=keywords)
@@ -104,5 +165,14 @@ def update(id):
 @login_required
 @admin_required
 def delete(id):
+    """
+    Route for deleting a story
+
+    Parameters:
+        id (string): Story ID for story to delete
+
+    Returns:
+        Redirects to home index
+    """
     delete_story(id)
     return redirect(url_for("home.index"))

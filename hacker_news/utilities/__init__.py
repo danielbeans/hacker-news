@@ -1,3 +1,6 @@
+"""
+Creates better access to functions within utilities module
+"""
 from .login_manager import (
     session_login,
     login_manager,

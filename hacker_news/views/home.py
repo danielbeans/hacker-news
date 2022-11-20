@@ -1,20 +1,38 @@
-from flask import Blueprint, render_template, redirect, url_for, session, g, request
-import os
-from urllib.parse import quote_plus, urlencode
-from flask_login import logout_user, current_user, login_required
-from ..utilities import query_top_stories, update_data, oauth, admin_required
-from time import time
-from datetime import timedelta
+"""
+Defines the routes for the home page
+
+Methods:
+    zip_stories(stories, type)
+    calculate_publish_time(timestamp)
+    set_current_user(endpoint, values)
+    index()
+    update()
+    update_comments()
+    logout()
+
+Variables:
+    home
+"""
+
 import asyncio
+import os
+from time import time
+from urllib.parse import quote_plus, urlencode
+from flask import Blueprint, render_template, redirect, url_for, session, g
+from flask_login import logout_user, current_user, login_required
+from ..utilities import query_top_stories, update_data, admin_required
 
 home = Blueprint("home", __name__)
 
 # * Similar functionality in admin.py, profile.py
 def zip_stories(stories):
     """
-    Calculates a story order number, publish time, and like/dislike status and zips them with their story
-    Arguments:
-        stories: An list of Story objects
+    Calculates a story order number, publish time, and like/dislike
+    status and zips them with their story
+
+    Parameters:
+        stories (list): An list of Story objects
+
     Returns:
         A zip object with tuples (order number, story, publish time)
     """
@@ -36,22 +54,37 @@ def zip_stories(stories):
 def calculate_publish_time(timestamp):
     """
     Calculate how much time has past since story was published
-    Arguments:
-        timestamp: Unix timestamp used to calculate publish time
+
+    Parameters:
+        timestamp (string): Unix timestamp used to calculate publish time
+
     Returns:
-        The time in minutes since story was published
+        An integer of the time in minutes since story was published
     """
     return int((time() - timestamp) // 60)
 
 
 @home.url_value_preprocessor
 def set_current_user(endpoint, values):
+    """
+    Sets variables before route is called
+
+    Parameters:
+        endpoint: Endpoint
+        values (dict): All the values route is called with
+    """
     g.current_user = current_user
 
 
 @home.route("/")
 def index():
-    num_stories = 30
+    """
+    Index route that shows homepage with the top stories
+
+    Returns:
+        Returns home.html
+    """
+    num_stories = 20
 
     numbered_stories = zip_stories(stories=query_top_stories(num_stories))
     return render_template(
@@ -62,6 +95,12 @@ def index():
 
 @home.route("/update")
 def update():
+    """
+    Route that updates the database with Hacker News data
+
+    Returns:
+        Redirects to the index route
+    """
     asyncio.run(update_data())
     return redirect(url_for(endpoint="home.index"))
 
@@ -70,6 +109,13 @@ def update():
 @admin_required
 @login_required
 def update_comments():
+    """
+    Route that gets the comments for each story in the database from Hacker
+    News API
+
+    Returns:
+        Returns JSON of the time it took to update database with comments
+    """
     start = time()
     asyncio.run(update_data(comments=True))
     return {"time_taken": f"{round(time() - start, 3)}"}
@@ -78,6 +124,12 @@ def update_comments():
 @home.route("/logout")
 @login_required
 def logout():
+    """
+    Route that logs out the User
+
+    Returns:
+        Redirects to auth0 to logout user
+    """
     logout_user()
     session.pop("is_authenticated")
     auth0_client_id = os.getenv("AUTH0_CLIENT_ID")

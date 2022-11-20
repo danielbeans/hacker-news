@@ -1,3 +1,15 @@
+"""
+Defines the routes for the admin pages
+
+Methods:
+    zip_stories(stories, type)
+    set_current_user(endpoint, values)
+    index()
+
+Variables:
+    admin
+"""
+
 from flask import Blueprint, render_template, g
 from flask_login import login_required, current_user
 from ..utilities import (
@@ -5,18 +17,21 @@ from ..utilities import (
     query_liked_stories,
     query_disliked_stories,
     query_story_association_by_id,
-    User,
 )
+from ..db import User
 
 admin = Blueprint("admin", __name__, url_prefix="/admin")
 
 # * Similar functionality in profile.py, home.py
 def zip_stories(stories, type):
     """
-    Removes duplicate stories, calculates which users liked/disliked a story and zips them with their story
-    Arguments:
-        stories: An list of Story objects
-        type: Type of StoryAssociation to search for
+    Removes duplicate stories, calculates which users liked/disliked a story
+    and zips them with their story
+
+    Parameters:
+        stories (list): An list of Story objects
+        type (string): Type of StoryAssociation to search for
+
     Returns:
         A zip object with tuples (story, [list of users])
     """
@@ -35,6 +50,13 @@ def zip_stories(stories, type):
 
 @admin.url_value_preprocessor
 def set_current_user(endpoint, values):
+    """
+    Sets variables before route is called
+
+    Parameters:
+        endpoint: Endpoint
+        values (dict): All the values route is called with
+    """
     g.current_user = current_user
 
 
@@ -42,6 +64,12 @@ def set_current_user(endpoint, values):
 @login_required
 @admin_required
 def index():
+    """
+    Index route that shows Admin page
+
+    Returns:
+        Returns admin.html
+    """
     liked_stories = zip_stories(query_liked_stories(), type="like")
     disliked_stories = zip_stories(query_disliked_stories(), type="dislike")
     return render_template(
